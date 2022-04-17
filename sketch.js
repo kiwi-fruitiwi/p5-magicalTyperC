@@ -2,6 +2,7 @@
  *  @author kiwi
  *  @date 2022.04.16
  *
+ *  ☐ extract info for one card and put together typing 'level'
  *
  */
 let font
