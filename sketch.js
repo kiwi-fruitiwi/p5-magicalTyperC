@@ -13,16 +13,17 @@ let correctSound /* audio cue for typing one char correctly */
 let incorrectSound /* audio cue for typing one char incorrectly */
 
 let scryfall /* json file from scryfall: set=snc */
-
+let cardImg
 
 function preload() {
     font = loadFont('data/consola.ttf')
     scryfall = loadJSON('json/scryfall-snc.json')
+    cardImg = loadImage('img/boon.png')
 }
 
 
 function setup() {
-    let cnv = createCanvas(640, 360)
+    let cnv = createCanvas(960, 360)
     cnv.parent('#canvas')
     colorMode(HSB, 360, 100, 100, 100)
 
@@ -37,33 +38,38 @@ function setup() {
     correctSound = loadSound('data/correct.wav')
     incorrectSound = loadSound('data/incorrect.wav')
 
-    passage = new Passage("Developers often work in teams, but it is not" +
-        " uncommon to find a developer who works independently as a" +
-        " consultant.  ")
-
-    outputCards()
-    noLoop()
+    passage = new Passage(outputCards()[3])
 }
 
 
 function draw() {
     background(234, 34, 24)
-    textFont(font, 30)
+    textFont(font, 24)
     passage.render()
 
-    displayDebugCorner()
+    cardImg.resize(240, 0)
+    tint(0, 0, 100, 75)
+    image(cardImg, 680, 15)
+    // displayDebugCorner()
+}
+
+
+/**
+ *  (name, id, art_crop uri, png uri, typeText with \n)
+ */
+function packCardData() {
+    let data = scryfall['data']
 }
 
 
 function outputCards() {
+    let results = []
     let data = scryfall['data']
-    console.log(data)
 
+    /* regex for detecting creatures and common/uncommon rarity */
     let creature = new RegExp('[Cc]reature')
     let rarity = new RegExp('(common|uncommon)')
     let count = 0
-
-    let colorCheck = false /* 'does not pass our card color filter' */
 
     for (let key of data) {
         let typeText = `${key.name} ${key['mana_cost']}\n${key['type_line']}\n${key['oracle_text']}`
@@ -73,15 +79,18 @@ function outputCards() {
             typeText += `\n${key['power']}/${key['toughness']}`
 
         /* only display commons and uncommons in our color filter */
-        if (rarity.test(key['rarity']) && key.colors.some(e => e === 'W')) {
-            console.log(typeText)
-            count++
+        if (rarity.test(key['rarity'])) {
+            if (key.colors.some(e => e === 'W')) {
+                results.push(typeText)
+                count++
+            }
         }
     }
 
     console.log(count)
+    return results
 
-    let key = data[0]
+    // let key = data[0]
     // console.log(`${key['collector_number']} → ${key['name']},
     // ${key['mana_cost']} → ${key['image_uris']['art_crop']}`)
 }
@@ -119,9 +128,11 @@ function keyPressed() {
         the incorrect sound. passage.setIncorrect().
      */
     if (passage.getCurrentChar() === key) {
+        console.log(passage.getCurrentChar())
         passage.setCorrect()
         correctSound.play()
     } else {
+        console.log(passage.getCurrentChar())
         passage.setIncorrect()
         incorrectSound.play()
     }

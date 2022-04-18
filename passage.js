@@ -28,7 +28,7 @@ class Passage {
 
         const TOP_MARGIN = 50
         const LEFT_MARGIN = 25
-        const RIGHT_MARGIN = LEFT_MARGIN
+        const RIGHT_MARGIN = 320
         const HIGHLIGHT_PADDING = 5
 
 
@@ -39,8 +39,7 @@ class Passage {
         const HIGHLIGHT_BOX_HEIGHT = textAscent() + textDescent() +
             2*HIGHLIGHT_PADDING
 
-        /*  display the entire passage without text wrap
-         */
+        /*  display the entire passage without text wrap */
         for (let i=0; i<this.text.length; i++) {
             // save the position of the ith character. we'll need this later
             CHAR_POS.push(cursor.copy())
@@ -75,7 +74,6 @@ class Passage {
             text(this.text[i], cursor.x, cursor.y)
 
 
-
             /*  modify cursor position to where the next letter should be
                 each highlight box should be 1 pixel bigger on left and right
                 1+1=2 total pixels of extra width
@@ -89,11 +87,18 @@ class Passage {
             // this is the horizontal coordinate where we must text wrap
             const LINE_WRAP_X_POS = width - RIGHT_MARGIN
 
+            /* handle newline characters! */
+            if (this.text[i] === '\n') {
+                cursor.y += HIGHLIGHT_BOX_HEIGHT + 5
+
+                // don't forget to wrap the x coordinates! ᴖᴥᴖ
+                cursor.x = LEFT_MARGIN
+            }
+
             /*  if we're at a whitespace, determine if we need a new line:
-                    find the next whitespace
-                    the word between us and that whitespace is the next word
-                    if the width of that word + our cursor + current space >
-                     limit, then newline
+                find the next whitespace; the word between us and that
+                whitespace is the next word. if the width of that word + our
+                cursor + current space > limit, then newline
              */
             if (this.text[i] === ' ') {
                 let ndi = this.text.indexOf(" ", i+1) // next delimiter index
@@ -102,7 +107,6 @@ class Passage {
                 if (textWidth(nextWord) +
                     textWidth(this.text[i]) +
                     cursor.x > LINE_WRAP_X_POS) {
-
 
                     cursor.y += HIGHLIGHT_BOX_HEIGHT + 5
 
@@ -113,11 +117,10 @@ class Passage {
         }
 
 
-        /*  add current word top highlight horizontal bar
-         */
+        /*  add current word top highlight horizontal bar */
         // find index of next and previous whitespace chars
 
-        // next delimiter index
+        // next delimiter index TODO: match \n as well
         let ndi = this.text.indexOf(" ", this.index)
 
         // previous delimiter index
