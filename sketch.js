@@ -38,7 +38,8 @@ function setup() {
     correctSound = loadSound('data/correct.wav')
     incorrectSound = loadSound('data/incorrect.wav')
 
-    passage = new Passage(outputCards()[3])
+    passage = new Passage(outputCards()[1])
+    console.log(outputCards()[1])
 }
 
 

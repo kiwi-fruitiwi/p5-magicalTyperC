@@ -44,9 +44,7 @@ class Passage {
             // save the position of the ith character. we'll need this later
             CHAR_POS.push(cursor.copy())
 
-
-            /*  show the highlight box for correct vs incorrect after we type
-             */
+            /*  show the highlight box for correct vs incorrect after we type */
             if (i < this.index) {
                 if (this.correctList[i])
                     fill(94, 100, 90, 15)
@@ -73,21 +71,17 @@ class Passage {
             fill(0, 0, 100, 70)
             text(this.text[i], cursor.x, cursor.y)
 
-
             /*  modify cursor position to where the next letter should be
                 each highlight box should be 1 pixel bigger on left and right
                 1+1=2 total pixels of extra width
              */
             cursor.x += textWidth(this.text[i]) + 2 // 2 = HORIZONTAL_PADDING
 
-            /*  let's do a simple word wrap, wrapping just by character!
-             */
-
 
             // this is the horizontal coordinate where we must text wrap
             const LINE_WRAP_X_POS = width - RIGHT_MARGIN
 
-            /* handle newline characters! */
+            /* handle newline characters! TODO needs fixing */
             if (this.text[i] === '\n') {
                 cursor.y += HIGHLIGHT_BOX_HEIGHT + 5
 
@@ -120,11 +114,17 @@ class Passage {
         /*  add current word top highlight horizontal bar */
         // find index of next and previous whitespace chars
 
-        // next delimiter index TODO: match \n as well
-        let ndi = this.text.indexOf(" ", this.index)
+        // next delimiter index TODO: match \n as well. works!
+        let ndi = min(
+            this.text.indexOf(' ', this.index),
+            this.text.indexOf('\n', this.index)
+            )
 
         // previous delimiter index
-        let pdi = this.text.lastIndexOf(" ", this.index)
+        let pdi = max(
+            this.text.lastIndexOf(' ', this.index),
+            this.text.lastIndexOf('\n', this.index)
+        )
 
         // +1 because we don't want the line to go over the previous
         // whitespace char
