@@ -42,6 +42,7 @@ function setup() {
         " consultant.  ")
 
     outputCards()
+    noLoop()
 }
 
 
@@ -58,15 +59,31 @@ function outputCards() {
     let data = scryfall['data']
     console.log(data)
 
+    let creature = new RegExp('[Cc]reature')
+    let rarity = new RegExp('(common|uncommon)')
+    let count = 0
+
+    let colorCheck = false /* 'does not pass our card color filter' */
+
     for (let key of data) {
-        console.log(`${key['collector_number']} → ${key['name']}, ${key['mana_cost']} → ${key['image_uris']['art_crop']}`)
+        let typeText = `${key.name} ${key['mana_cost']}\n${key['type_line']}\n${key['oracle_text']}`
+
+        /* sometimes p/t don't exist. check type */
+        if (creature.test(key['type_line']))
+            typeText += `\n${key['power']}/${key['toughness']}`
+
+        /* only display commons and uncommons in our color filter */
+        if (rarity.test(key['rarity']) && key.colors.some(e => e === 'W')) {
+            console.log(typeText)
+            count++
+        }
     }
 
-    // for (let key in scryfall.data) {
-    //     console.log(scryfall.data['key']['name'])
-    // }
-        // for (let subKey in key)
-        //     console.log(`${key}→${subKey}`)
+    console.log(count)
+
+    let key = data[0]
+    // console.log(`${key['collector_number']} → ${key['name']},
+    // ${key['mana_cost']} → ${key['image_uris']['art_crop']}`)
 }
 
 
