@@ -9,13 +9,15 @@ let font
 let instructions
 
 let passage
-let correctSound // audio cue for typing one char correctly
-let incorrectSound // audio cue for typing one char incorrectly
+let correctSound /* audio cue for typing one char correctly */
+let incorrectSound /* audio cue for typing one char incorrectly */
 
+let scryfall /* json file from scryfall: set=snc */
 
 
 function preload() {
     font = loadFont('data/consola.ttf')
+    scryfall = loadJSON('json/scryfall-snc.json')
 }
 
 
@@ -38,6 +40,8 @@ function setup() {
     passage = new Passage("Developers often work in teams, but it is not" +
         " uncommon to find a developer who works independently as a" +
         " consultant.  ")
+
+    outputCards()
 }
 
 
@@ -50,8 +54,26 @@ function draw() {
 }
 
 
+function outputCards() {
+    let data = scryfall['data']
+    console.log(data)
+
+    for (let key of data) {
+        console.log(`${key['collector_number']} → ${key['name']}, ${key['mana_cost']} → ${key['image_uris']['art_crop']}`)
+    }
+
+    // for (let key in scryfall.data) {
+    //     console.log(scryfall.data['key']['name'])
+    // }
+        // for (let subKey in key)
+        //     console.log(`${key}→${subKey}`)
+}
+
+
 /** 🧹 shows debugging info using text() 🧹 */
 function displayDebugCorner() {
+    textFont(font, 14)
+
     const LEFT_MARGIN = 10
     const DEBUG_Y_OFFSET = height - 10 /* floor of debug corner */
     const LINE_SPACING = 2
@@ -59,7 +81,6 @@ function displayDebugCorner() {
     fill(0, 0, 100, 100) /* white */
     strokeWeight(0)
 
-    textFont(font, 14)
     text(`frameCount: ${frameCount}`,
         LEFT_MARGIN, DEBUG_Y_OFFSET - LINE_HEIGHT)
     text(`frameRate: ${frameRate().toFixed(1)}`,
