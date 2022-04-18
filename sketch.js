@@ -124,16 +124,26 @@ function keyPressed() {
         return
     }
 
+    /* temporary hack for handling enter key */
+    if (keyCode === ENTER) {
+        if (passage.getCurrentChar() === '\n') {
+            passage.setCorrect()
+            correctSound.play()
+        } else {
+            passage.setIncorrect()
+            incorrectSound.play()
+        }
+        return
+    }
+
     /*  if the key we just pressed === passage.getCurrentChar, play correct
         sound, rewind it, passage.setCorrect(). otherwise, play and rewind
         the incorrect sound. passage.setIncorrect().
      */
     if (passage.getCurrentChar() === key) {
-        console.log(passage.getCurrentChar())
         passage.setCorrect()
         correctSound.play()
     } else {
-        console.log(passage.getCurrentChar())
         passage.setIncorrect()
         incorrectSound.play()
     }

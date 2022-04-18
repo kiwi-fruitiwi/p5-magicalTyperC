@@ -133,6 +133,8 @@ class Passage {
 
         rect(
             CHAR_POS[pdi+1].x, // start one char past the last delimiter
+
+            // TODO something wrong with this → no y property at end of passage
             CHAR_POS[ndi].y - textAscent() - HIGHLIGHT_PADDING - 2,
             // CHAR_POS[ndi].x - CHAR_POS[pdi].x
             // this.textWidth*(ndi-pdi),
