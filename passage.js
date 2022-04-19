@@ -21,8 +21,10 @@ class Passage {
         this.LEFT_MARGIN = 25
         this.RIGHT_MARGIN = 320
         this.HIGHLIGHT_PADDING = 5
-        this.HIGHLIGHT_BOX_HEIGHT = textAscent() + textDescent() +
-            2*this.HIGHLIGHT_PADDING
+        this.HIGHLIGHT_BOX_HEIGHT = 0 /* to be set dynamically later */
+
+        /* this is the horizontal coordinate where we must text wrap */
+        this.LINE_WRAP_X_POS = width - this.RIGHT_MARGIN
     }
 
 
@@ -30,61 +32,38 @@ class Passage {
     render() {
         noStroke()
 
-        let CHAR_POS = [] /* list of positions of every displayed char */
+        /* needs to be redeclared because constructor is invoked before
+         textAscent / descent are valid */
+        this.HIGHLIGHT_BOX_HEIGHT = textAscent() + textDescent() +
+            2*this.HIGHLIGHT_PADDING
 
+        /* position list for every displayed char, used for current word bar */
+        let CHAR_POS = []
 
         /* bottom left corner of the current letter we are about to type */
         let cursor = new p5.Vector(this.LEFT_MARGIN, this.TOP_MARGIN)
-        let highlightTopLeftCorner = new p5.Vector()
 
         /* iterate through every char in this passage */
         for (let i=0; i<this.text.length; i++) {
             /* save the position every character for later */
             CHAR_POS.push(cursor.copy())
+            this.#showHighlightBox(i, cursor)
 
-            /** show the highlight box for correct vs incorrect after we type */
-            /* only show highlight boxes for chars we've already typed */
-            if (i < this.index) { /*  */
-                if (this.correctList[i])
-                    fill(94, 100, 90, 15) /* green for correct */
-                else
-                    fill(0, 100, 100, 20) /* red for incorrect */
-
-                highlightTopLeftCorner.x = cursor.x
-                highlightTopLeftCorner.y = cursor.y - textAscent()
-
-                rect( /* the actual highlight box */
-                    highlightTopLeftCorner.x,
-                    highlightTopLeftCorner.y - this.HIGHLIGHT_PADDING,
-                    textWidth(this.text[i]),
-                    this.HIGHLIGHT_BOX_HEIGHT,
-                    2) // rounded rectangle corners
-            }
-
-            /*  draw current letter above the highlight box in terms of z-index
-             */
+            /* draw current letter; greater z-index than highlightBox */
             fill(0, 0, 100, 70)
             text(this.text[i], cursor.x, cursor.y)
 
-            /*  modify cursor position to where the next letter should be
-                each highlight box should be 1 pixel bigger on left and right
-                1+1=2 total pixels of extra width
+            /* modify cursor position to where the next letter should be;
+               each highlight box should be 1 pixel bigger on left and right
+               1+1=2 total pixels of extra width
              */
             cursor.x += textWidth(this.text[i]) + 2 // 2 = HORIZONTAL_PADDING
 
+            /* wrap to handle newlines → needs additional code in keyPressed */
+            if (this.text[i] === '\n')
+                this.#wrapCursor(cursor)
 
-            // this is the horizontal coordinate where we must text wrap
-            const LINE_WRAP_X_POS = width - this.RIGHT_MARGIN
-
-            /* handle newline characters! TODO needs fixing */
-            if (this.text[i] === '\n') {
-                cursor.y += this.HIGHLIGHT_BOX_HEIGHT + 5
-
-                // don't forget to wrap the x coordinates! ᴖᴥᴖ
-                cursor.x = this.LEFT_MARGIN
-            }
-
-            /*  if we're at a whitespace, determine if we need a new line:
+            /** if we're at a whitespace, determine if we need a new line:
                 find the next whitespace; the word between us and that
                 whitespace is the next word. if the width of that word + our
                 cursor + current space > limit, then newline
@@ -95,59 +74,90 @@ class Passage {
 
                 if (textWidth(nextWord) +
                     textWidth(this.text[i]) +
-                    cursor.x > LINE_WRAP_X_POS) {
-
-                    cursor.y += this.HIGHLIGHT_BOX_HEIGHT + 5
-
-                    // don't forget to wrap the x coordinates! ᴖᴥᴖ
-                    cursor.x = this.LEFT_MARGIN
+                    cursor.x > this.LINE_WRAP_X_POS) {
+                    this.#wrapCursor(cursor)
                 }
             }
         }
 
+        this.#showCurrentWordBar(CHAR_POS)
+        this.#showCursor(CHAR_POS)
+    }
 
-        /*  add current word top highlight horizontal bar */
-        // find index of next and previous whitespace chars
 
-        // next delimiter index TODO: match \n as well. works!
-        let ndi = min(
+    /**
+     * shows the cursor at the current word we're typing
+     * @param positions list of positions for every character we are
+     * displaying in this passage
+     */
+    #showCursor(positions) {
+        fill(0, 0, 100)
+        /* TODO check if we're finished, otherwise we try to read [index+1] */
+        rect(
+            positions[this.index].x,
+            positions[this.index].y + textDescent(),
+            textWidth(this.text[this.index]),
+            2,
+            2)
+    }
+
+
+    /**
+     * shows a bar  above the current word by determining where the current
+     * word starts and stops using whitespace delimiters ' ' and '\n'
+     * @param positions list of positions for every character we are
+     * displaying in this passage
+     */
+    #showCurrentWordBar (positions) {
+        fill(0, 0, 80, 30) // gray
+
+        let ndi = min( /* ndi = 'next delimiter index */
             this.text.indexOf(' ', this.index),
             this.text.indexOf('\n', this.index)
-            )
+        )
 
-        // previous delimiter index
-        let pdi = max(
+        let pdi = max( /* pdi = 'previous delimiter index */
             this.text.lastIndexOf(' ', this.index),
             this.text.lastIndexOf('\n', this.index)
         )
 
-        // +1 because we don't want the line to go over the previous
-        // whitespace char
-        fill(0, 0, 80, 30) // gray
-
-
+        /* +1: we don't want the line to go over the previous delimiter char */
         rect(
-            CHAR_POS[pdi+1].x, // start one char past the last delimiter
-
-            // TODO something wrong with this → no y property at end of passage
-            CHAR_POS[ndi].y - textAscent() - this.HIGHLIGHT_PADDING - 2,
-            // CHAR_POS[ndi].x - CHAR_POS[pdi].x
-            // this.textWidth*(ndi-pdi),
+            positions[pdi+1].x, /* start one char past the last delimiter */
+            positions[ndi].y - textAscent() - this.HIGHLIGHT_PADDING - 2,
             textWidth(this.text.substring(pdi+1, ndi+1)),
             -2,
             2)  // rounded rect corners
+    }
 
-        /*  add cursor below current character
-        */
-        fill(0, 0, 100)
 
-        // TODO check if we're finished, otherwise we try to read [index+1]
-        rect(
-            CHAR_POS[this.index].x,
-            CHAR_POS[this.index].y + textDescent(),
-            textWidth(this.text[this.index]),
-            2,
-            2)
+    /** show the highlight box for correct vs incorrect after we type */
+    #showHighlightBox(index, cursor) {
+        /* only show highlight boxes for chars we've already typed */
+        if (index < this.index) { /*  */
+            if (this.correctList[index])
+                fill(94, 100, 90, 15) /* green for correct */
+            else
+                fill(0, 100, 100, 20) /* red for incorrect */
+
+            let highlightTopLeftCorner = new p5.Vector(
+                cursor.x,
+                cursor.y - textAscent()
+            )
+
+            rect( /* the actual highlight box */
+                highlightTopLeftCorner.x,
+                highlightTopLeftCorner.y - this.HIGHLIGHT_PADDING,
+                textWidth(this.text[index]),
+                this.HIGHLIGHT_BOX_HEIGHT,
+                2) // rounded rectangle corners
+        }
+    }
+
+
+    #wrapCursor(cursor) { /* mutate cursor coordinates to wrap */
+        cursor.y += this.HIGHLIGHT_BOX_HEIGHT + 5
+        cursor.x = this.LEFT_MARGIN /* don't forget to wrap the x ᴖᴥᴖ */
     }
 
 
