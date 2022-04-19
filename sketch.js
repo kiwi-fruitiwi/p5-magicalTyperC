@@ -38,8 +38,8 @@ function setup() {
     correctSound = loadSound('data/correct.wav')
     incorrectSound = loadSound('data/incorrect.wav')
 
-    passage = new Passage(outputCards()[1])
-    console.log(outputCards()[1])
+    passage = new Passage(getCardData()[1])
+    console.log(getCardData()[1])
 }
 
 
@@ -63,7 +63,7 @@ function packCardData() {
 }
 
 
-function outputCards() {
+function getCardData() {
     let results = []
     let data = scryfall['data']
 
@@ -73,6 +73,7 @@ function outputCards() {
     let count = 0
 
     for (let key of data) {
+        // let removeEmdashTypeLine = key['type_line'].replace('—', '-')
         let typeText = `${key.name} ${key['mana_cost']}\n${key['type_line']}\n${key['oracle_text']}`
 
         /* sometimes p/t don't exist. check type */
@@ -127,6 +128,18 @@ function keyPressed() {
     /* temporary hack for handling enter key */
     if (keyCode === ENTER) {
         if (passage.getCurrentChar() === '\n') {
+            passage.setCorrect()
+            correctSound.play()
+        } else {
+            passage.setIncorrect()
+            incorrectSound.play()
+        }
+        return
+    }
+
+    /* handle emdash by allowing dash to replace it */
+    if (key === '-') {
+        if (passage.getCurrentChar() === '—') {
             passage.setCorrect()
             correctSound.play()
         } else {
