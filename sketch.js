@@ -127,25 +127,13 @@ function keyPressed() {
 
     /* temporary hack for handling enter key */
     if (keyCode === ENTER) {
-        if (passage.getCurrentChar() === '\n') {
-            passage.setCorrect()
-            correctSound.play()
-        } else {
-            passage.setIncorrect()
-            incorrectSound.play()
-        }
+        processTypedKey('\n')
         return
     }
 
     /* handle emdash by allowing dash to replace it */
     if (key === '-') {
-        if (passage.getCurrentChar() === '—') {
-            passage.setCorrect()
-            correctSound.play()
-        } else {
-            passage.setIncorrect()
-            incorrectSound.play()
-        }
+        processTypedKey('—')
         return
     }
 
@@ -153,13 +141,7 @@ function keyPressed() {
         sound, rewind it, passage.setCorrect(). otherwise, play and rewind
         the incorrect sound. passage.setIncorrect().
      */
-    if (passage.getCurrentChar() === key) {
-        passage.setCorrect()
-        correctSound.play()
-    } else {
-        passage.setIncorrect()
-        incorrectSound.play()
-    }
+    processTypedKey(key)
 
 
     /* stop sketch */
@@ -171,6 +153,15 @@ function keyPressed() {
 }
 
 
+function processTypedKey(k) {
+    if (passage.getCurrentChar() === k) {
+        passage.setCorrect()
+        correctSound.play()
+    } else {
+        passage.setIncorrect()
+        incorrectSound.play()
+    }
+}
 
 
 /*
