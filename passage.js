@@ -1,11 +1,10 @@
-/*
+/**
     displays a passage for typing, keeping track of correct and incorrect
     letters by highlighting them
 
     TODO
         block on incorrect characters until correct one is entered
  */
-
 class Passage {
     constructor(text) {
         this.text = text
@@ -17,6 +16,13 @@ class Passage {
          TODO this currently does not work because we skip incorrect chars :p
          */
         this.lastIncorrectIndex = -1
+
+        this.TOP_MARGIN = 50
+        this.LEFT_MARGIN = 25
+        this.RIGHT_MARGIN = 320
+        this.HIGHLIGHT_PADDING = 5
+        this.HIGHLIGHT_BOX_HEIGHT = textAscent() + textDescent() +
+            2*this.HIGHLIGHT_PADDING
     }
 
 
@@ -24,47 +30,36 @@ class Passage {
     render() {
         noStroke()
 
-        let CHAR_POS = []
-
-        const TOP_MARGIN = 50
-        const LEFT_MARGIN = 25
-        const RIGHT_MARGIN = 320
-        const HIGHLIGHT_PADDING = 5
+        let CHAR_POS = [] /* list of positions of every displayed char */
 
 
-        // the bottom left corner of the current letter we are typing = cursor
-        let cursor = new p5.Vector(LEFT_MARGIN, TOP_MARGIN)
-
+        /* bottom left corner of the current letter we are about to type */
+        let cursor = new p5.Vector(this.LEFT_MARGIN, this.TOP_MARGIN)
         let highlightTopLeftCorner = new p5.Vector()
-        const HIGHLIGHT_BOX_HEIGHT = textAscent() + textDescent() +
-            2*HIGHLIGHT_PADDING
 
-        /*  display the entire passage without text wrap */
+        /* iterate through every char in this passage */
         for (let i=0; i<this.text.length; i++) {
-            // save the position of the ith character. we'll need this later
+            /* save the position every character for later */
             CHAR_POS.push(cursor.copy())
 
-            /*  show the highlight box for correct vs incorrect after we type */
-            if (i < this.index) {
+            /** show the highlight box for correct vs incorrect after we type */
+            /* only show highlight boxes for chars we've already typed */
+            if (i < this.index) { /*  */
                 if (this.correctList[i])
-                    fill(94, 100, 90, 15)
+                    fill(94, 100, 90, 15) /* green for correct */
                 else
-                    fill(0, 100, 100, 20)
+                    fill(0, 100, 100, 20) /* red for incorrect */
 
                 highlightTopLeftCorner.x = cursor.x
                 highlightTopLeftCorner.y = cursor.y - textAscent()
 
-                rect(
+                rect( /* the actual highlight box */
                     highlightTopLeftCorner.x,
-                    highlightTopLeftCorner.y - HIGHLIGHT_PADDING,
+                    highlightTopLeftCorner.y - this.HIGHLIGHT_PADDING,
                     textWidth(this.text[i]),
-                    HIGHLIGHT_BOX_HEIGHT,
+                    this.HIGHLIGHT_BOX_HEIGHT,
                     2) // rounded rectangle corners
-            } else {
-                // don't draw a rect background if we haven't typed up to
-                // this index
             }
-
 
             /*  draw current letter above the highlight box in terms of z-index
              */
@@ -79,14 +74,14 @@ class Passage {
 
 
             // this is the horizontal coordinate where we must text wrap
-            const LINE_WRAP_X_POS = width - RIGHT_MARGIN
+            const LINE_WRAP_X_POS = width - this.RIGHT_MARGIN
 
             /* handle newline characters! TODO needs fixing */
             if (this.text[i] === '\n') {
-                cursor.y += HIGHLIGHT_BOX_HEIGHT + 5
+                cursor.y += this.HIGHLIGHT_BOX_HEIGHT + 5
 
                 // don't forget to wrap the x coordinates! ᴖᴥᴖ
-                cursor.x = LEFT_MARGIN
+                cursor.x = this.LEFT_MARGIN
             }
 
             /*  if we're at a whitespace, determine if we need a new line:
@@ -102,10 +97,10 @@ class Passage {
                     textWidth(this.text[i]) +
                     cursor.x > LINE_WRAP_X_POS) {
 
-                    cursor.y += HIGHLIGHT_BOX_HEIGHT + 5
+                    cursor.y += this.HIGHLIGHT_BOX_HEIGHT + 5
 
                     // don't forget to wrap the x coordinates! ᴖᴥᴖ
-                    cursor.x = LEFT_MARGIN
+                    cursor.x = this.LEFT_MARGIN
                 }
             }
         }
@@ -135,7 +130,7 @@ class Passage {
             CHAR_POS[pdi+1].x, // start one char past the last delimiter
 
             // TODO something wrong with this → no y property at end of passage
-            CHAR_POS[ndi].y - textAscent() - HIGHLIGHT_PADDING - 2,
+            CHAR_POS[ndi].y - textAscent() - this.HIGHLIGHT_PADDING - 2,
             // CHAR_POS[ndi].x - CHAR_POS[pdi].x
             // this.textWidth*(ndi-pdi),
             textWidth(this.text.substring(pdi+1, ndi+1)),
@@ -195,11 +190,6 @@ class Passage {
 
             this.incrementIndex()
         }
-    }
-
-
-    decrementIndex() {
-        this.index -= 1
     }
 
 
