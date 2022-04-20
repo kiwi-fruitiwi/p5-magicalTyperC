@@ -61,7 +61,7 @@ class Passage {
             this.#handleNewLines(i, cursor)
         }
 
-        // this.#showCurrentWordBar(CHAR_POS)
+        this.#showCurrentWordBar(CHAR_POS)
         this.#showTextCursor(CHAR_POS)
     }
 
@@ -82,13 +82,24 @@ class Passage {
          whitespace is the next word. if the width of that word + our
          cursor + current space > limit, then newline
          */
+        /* TODO passage MUST contain an ending \n or the -1 return value
+            from indexOf finding nothing breaks the wrapping
+            → the fix sets indexOfNextNewline to the end of the passage */
+        let indexOfNextNewline = this.text.indexOf('\n', i+1)
+        let indexOfNextSpace = this.text.indexOf(' ', i+1)
+
+        if (indexOfNextNewline === -1)
+            indexOfNextNewline = this.text.length - 1
+        if (indexOfNextSpace === -1)
+            indexOfNextSpace = this.text.length - 1
+
         if (this.text[i] === ' ') {
-            let ndi = this.text.indexOf(" ", i+1) // next delimiter index
+            /* ndi is the next delimiter index */
+            let ndi = min(indexOfNextSpace, indexOfNextNewline)
             let nextWord = this.text.substring(i+1, ndi)
 
-            if (textWidth(nextWord) +
-                textWidth(this.text[i]) +
-                cursor.x > this.LINE_WRAP_X_POS) {
+            if (textWidth(nextWord) + textWidth(this.text[i]) + cursor.x >
+                this.LINE_WRAP_X_POS) {
                 this.#wrapCursor(cursor)
             }
         }
@@ -124,38 +135,42 @@ class Passage {
         /* indexOf returns -1 if not found, so we need a special case */
         let indexOfNextSpace = this.text.indexOf(' ', this.index)
         let indexOfNextNewline = this.text.indexOf('\n', this.index)
-        const nextNewlineNotFound = (indexOfNextNewline === -1)
-        const nextSpaceNotFound = (indexOfNextSpace === -1)
+        let indexOfLastSpace = this.text.lastIndexOf(' ', this.index)
+        let indexOfLastNewline = this.text.lastIndexOf('\n', this.index)
 
-        if (nextNewlineNotFound)
+        /* FIX: ndi is -1 if passage is missing \n */
+        if (indexOfNextNewline === -1)
             indexOfNextNewline = this.text.length-1
-        if (nextSpaceNotFound)
-            indexOfNextSpace = this.text.length-1
 
-        let ndi /* next delimiter index */
-        if (nextNewlineNotFound && nextSpaceNotFound) {
-            ndi = this.text.length-1
+        /* 'next delimiter index', 'previous delimiter index' */
+        const ndi = min(indexOfNextSpace, indexOfNextNewline)
+        const pdi = max(indexOfLastSpace, indexOfLastNewline)
+        // DEBUG_TEXT = `pdf+1→${pdi+1}, ndi→${ndi}`
+
+        /*  handles last word corner case: if we don't find a subsequent
+            whitespace (ndi's indexOf returns -1), set our bar to cover up to
+            the last character in the passage
+         */
+        let barY, barWidth
+
+        if (ndi === -1) {
+            barY = positions[this.text.length-1].y
+            barWidth = textWidth(this.text.substring(pdi+1))
         } else {
-            ndi = min(
-            this.text.indexOf(' ', this.index),
-            this.text.indexOf('\n', this.index))
+            barY = positions[ndi].y
+            barWidth = textWidth(this.text.substring(pdi+1, ndi+1))
         }
+        barY -= textAscent() + this.HIGHLIGHT_PADDING + 2
 
-        const pdi = max( /* pdi = 'previous delimiter index */
-            this.text.lastIndexOf(' ', this.index),
-            this.text.lastIndexOf('\n', this.index)
-        )
-
-        console.log(ndi)
-        DEBUG_TEXT = `pdf+1→${pdi+1}, ndi→${ndi}`
-
-        /* +1: we don't want the line to go over the previous delimiter char */
-        rect(
-            positions[pdi+1].x, /* start one char past the last delimiter */
-            positions[ndi].y - textAscent() - this.HIGHLIGHT_PADDING - 2,
-            textWidth(this.text.substring(pdi+1, ndi+1)),
-            -2,
-            2)  // rounded rect corners
+        /* display bar; handle last char corner case because pdi returns -1 */
+        if (!passage.finished()) {
+            rect( /* rect(x, y, w, h) */
+                positions[pdi+1].x, /* start one char past the last delimiter */
+                barY,
+                barWidth,
+                -2,
+                2)  /* rounded rect corners */
+        }
     }
 
 
@@ -200,47 +215,25 @@ class Passage {
     }
 
 
-    // set the current char to correct
-    // TODO block on errors not supported
+    /* set the current char to correct */
     setCorrect() {
-        // if we've already gotten this char incorrect, don't add a correct
-        // value to correctList
-        if (this.lastIncorrectIndex === this.index) {
-            // do nothing
-        } else {
-            this.correctList.push(true)
-            if (!this.finished())
-                this.incrementIndex()
-        }
-
-        // console.assert(this.correctList.length === this.index)
+        this.correctList.push(true)
+        this.advance()
     }
 
 
-    // set the current char to be incorrect
-    // TODO block on errors not supported
+    /* set the current char to be incorrect */
     setIncorrect() {
-        // only set incorrect for an index once!
-        if (this.lastIncorrectIndex !== this.index) {
-            this.correctList.push(false)
-            this.lastIncorrectIndex = this.index
-
-            /*
-                typingclub.com has two options:
-                    an incorrect advances the cursor, skipping the char
-                    an incorrect does not advance, requiring a correction
-
-                current code doesn't block on errors
-             */
-            if (!this.finished())
-                this.incrementIndex()
-        }
+        this.correctList.push(false)
+        this.lastIncorrectIndex = this.index
+        this.advance()
     }
 
 
-    incrementIndex() {
-        if (this.index < this.text.length -1)
+    advance() {
+        if (!this.finished())
             this.index += 1
+        else DEBUG_TEXT = `tried to advance but passage was already done`
     }
 
 

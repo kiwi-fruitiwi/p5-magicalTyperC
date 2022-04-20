@@ -40,7 +40,8 @@ function setup() {
     incorrectSound = loadSound('data/incorrect.wav')
 
     // passage = new Passage(getCardData()[1])
-    passage = new Passage('sun rises\n')
+    passage = new Passage('When Backup Agent enters the battlefield, put a' +
+        ' +1/+1 counter on target creature.\n1/1\n')
     console.log(getCardData()[1])
 }
 
@@ -75,11 +76,11 @@ function getCardData() {
     let count = 0
 
     for (let key of data) {
-        let typeText = `${key.name} ${key['mana_cost']}\n${key['type_line']}\n${key['oracle_text']}`
+        let typeText = `${key.name} ${key['mana_cost']}\n${key['type_line']}\n${key['oracle_text']}\n`
 
         /* sometimes p/t don't exist. check type */
         if (creature.test(key['type_line']))
-            typeText += `\n${key['power']}/${key['toughness']}\n`
+            typeText += `${key['power']}/${key['toughness']}\n`
             /* we need whitespace at end for passage end detection to work */
 
         /* only display commons and uncommons in our color filter */
