@@ -18,8 +18,8 @@ class Passage {
         this.lastIncorrectIndex = -1
 
         this.TOP_MARGIN = 50
-        this.LEFT_MARGIN = 25
-        this.RIGHT_MARGIN = 320
+        this.LEFT_MARGIN = 30
+        this.RIGHT_MARGIN = 300
         this.HIGHLIGHT_PADDING = 5
         this.HIGHLIGHT_BOX_HEIGHT = 0 /* to be set dynamically later */
 
@@ -141,6 +141,9 @@ class Passage {
         /* FIX: ndi is -1 if passage is missing \n */
         if (indexOfNextNewline === -1)
             indexOfNextNewline = this.text.length-1
+
+        if (indexOfNextSpace === -1)
+            indexOfNextSpace = this.text.length-1
 
         /* 'next delimiter index', 'previous delimiter index' */
         const ndi = min(indexOfNextSpace, indexOfNextNewline)

@@ -24,7 +24,7 @@ function preload() {
 
 
 function setup() {
-    let cnv = createCanvas(960, 360)
+    let cnv = createCanvas(960, 640)
     cnv.parent('#canvas')
     colorMode(HSB, 360, 100, 100, 100)
 
@@ -39,10 +39,16 @@ function setup() {
     correctSound = loadSound('data/correct.wav')
     incorrectSound = loadSound('data/incorrect.wav')
 
-    // passage = new Passage(getCardData()[1])
-    passage = new Passage('When Backup Agent enters the battlefield, put a' +
-        ' +1/+1 counter on target creature.\n1/1\n')
-    console.log(getCardData()[1])
+    // passage = new Passage('When Backup Agent enters the battlefield, put a' +
+    //     ' +1/+1 counter on target creature.\n1/1\n')
+
+    let cards = getCardData()
+    cards.sort(sortCardsByID)
+    for (const card of cards) {
+        // console.log(`${card.collector_number}→${card.name}`)
+    }
+
+    passage = new Passage(cards[150].typeText)
 }
 
 
@@ -53,19 +59,23 @@ function draw() {
 
     cardImg.resize(240, 0)
     tint(0, 0, 100, 75)
-    image(cardImg, 680, 15)
+    image(cardImg, 690, 15)
     displayDebugCorner()
+}
+
+
+function sortCardsByID(a, b) {
+    if (a.collector_number === b.collector_number) {
+        return 0;
+    } else {
+        return (a.collector_number < b.collector_number) ? -1 : 1;
+    }
 }
 
 
 /**
  *  (name, id, art_crop uri, png uri, typeText with \n)
  */
-function packCardData() {
-    let data = scryfall['data']
-}
-
-
 function getCardData() {
     let results = []
     let data = scryfall['data']
@@ -74,25 +84,34 @@ function getCardData() {
     let creature = new RegExp('[Cc]reature')
     let rarity = new RegExp('(common|uncommon)')
     let count = 0
+    let typeText = ''
 
     for (let key of data) {
-        let typeText = `${key.name} ${key['mana_cost']}\n${key['type_line']}\n${key['oracle_text']}\n`
+        typeText = `${key.name} ${key['mana_cost']}\n${key['type_line']}\n${key['oracle_text']}\n`
 
         /* sometimes p/t don't exist. check type */
         if (creature.test(key['type_line']))
-            typeText += `${key['power']}/${key['toughness']}\n`
+            typeText += `${key['power']}/${key['toughness']}`
             /* we need whitespace at end for passage end detection to work */
 
         /* only display commons and uncommons in our color filter */
         if (rarity.test(key['rarity'])) {
-            if (key.colors.some(e => e === 'W')) {
-                results.push(typeText)
-                count++
-            }
+            results.push({
+                'typeText': typeText + '\n',
+                'name': key.name,
+                'collector_number': int(key['collector_number']),
+                'art_crop_uri': key['image_uris']['art_crop'],
+                'png_uri': key['image_uris']['png']
+            })
+            count++
+
+            // if (key.colors.some(e => e === 'W')) {
+            //     results.push(typeText)
+            //     count++
+            // }
         }
     }
 
-    console.log(count)
      // let unused = `${key['image_uris']['art_crop']}`
     return results
 }
