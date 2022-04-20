@@ -7,6 +7,7 @@
  */
 let font
 let instructions
+let DEBUG_TEXT
 
 let passage
 let correctSound /* audio cue for typing one char correctly */
@@ -38,7 +39,8 @@ function setup() {
     correctSound = loadSound('data/correct.wav')
     incorrectSound = loadSound('data/incorrect.wav')
 
-    passage = new Passage(getCardData()[1])
+    // passage = new Passage(getCardData()[1])
+    passage = new Passage('sun rises\n')
     console.log(getCardData()[1])
 }
 
@@ -51,7 +53,7 @@ function draw() {
     cardImg.resize(240, 0)
     tint(0, 0, 100, 75)
     image(cardImg, 680, 15)
-    // displayDebugCorner()
+    displayDebugCorner()
 }
 
 
@@ -73,12 +75,12 @@ function getCardData() {
     let count = 0
 
     for (let key of data) {
-        // let removeEmdashTypeLine = key['type_line'].replace('—', '-')
         let typeText = `${key.name} ${key['mana_cost']}\n${key['type_line']}\n${key['oracle_text']}`
 
         /* sometimes p/t don't exist. check type */
         if (creature.test(key['type_line']))
-            typeText += `\n${key['power']}/${key['toughness']}`
+            typeText += `\n${key['power']}/${key['toughness']}\n`
+            /* we need whitespace at end for passage end detection to work */
 
         /* only display commons and uncommons in our color filter */
         if (rarity.test(key['rarity'])) {
@@ -90,11 +92,8 @@ function getCardData() {
     }
 
     console.log(count)
+     // let unused = `${key['image_uris']['art_crop']}`
     return results
-
-    // let key = data[0]
-    // console.log(`${key['collector_number']} → ${key['name']},
-    // ${key['mana_cost']} → ${key['image_uris']['art_crop']}`)
 }
 
 
@@ -109,10 +108,11 @@ function displayDebugCorner() {
     fill(0, 0, 100, 100) /* white */
     strokeWeight(0)
 
+    text(`→ ${DEBUG_TEXT}`, LEFT_MARGIN, DEBUG_Y_OFFSET)
     text(`frameCount: ${frameCount}`,
         LEFT_MARGIN, DEBUG_Y_OFFSET - LINE_HEIGHT)
-    text(`frameRate: ${frameRate().toFixed(1)}`,
-        LEFT_MARGIN, DEBUG_Y_OFFSET)
+    // text(`frameRate: ${frameRate().toFixed(1)}`,
+    //     LEFT_MARGIN, DEBUG_Y_OFFSET)
 }
 
 
@@ -137,14 +137,9 @@ function keyPressed() {
         return
     }
 
-    /*  if the key we just pressed === passage.getCurrentChar, play correct
-        sound, rewind it, passage.setCorrect(). otherwise, play and rewind
-        the incorrect sound. passage.setIncorrect().
-     */
     processTypedKey(key)
 
-
-    /* stop sketch */
+    /* stop sketch on numpad1 */
     if (keyCode === 97) {
         noLoop()
         instructions.html(`<pre>
@@ -153,8 +148,18 @@ function keyPressed() {
 }
 
 
+/**
+ * process a keypress!
+ *
+ * if the key user just pressed === passage.getCurrentChar:
+ *  → play correct sound, rewind it, passage.setCorrect()
+ *  → otherwise, play and rewind the incorrect sound → passage.setIncorrect()
+ * @param k
+ */
 function processTypedKey(k) {
-    if (passage.getCurrentChar() === k) {
+    if (passage.finished())
+        noLoop()
+    else if (passage.getCurrentChar() === k) {
         passage.setCorrect()
         correctSound.play()
     } else {

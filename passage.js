@@ -58,30 +58,40 @@ class Passage {
                1+1=2 total pixels of extra width
              */
             cursor.x += textWidth(this.text[i]) + 2 // 2 = HORIZONTAL_PADDING
-
-            /* wrap to handle newlines → needs additional code in keyPressed */
-            if (this.text[i] === '\n')
-                this.#wrapCursor(cursor)
-
-            /** if we're at a whitespace, determine if we need a new line:
-                find the next whitespace; the word between us and that
-                whitespace is the next word. if the width of that word + our
-                cursor + current space > limit, then newline
-             */
-            if (this.text[i] === ' ') {
-                let ndi = this.text.indexOf(" ", i+1) // next delimiter index
-                let nextWord = this.text.substring(i+1, ndi)
-
-                if (textWidth(nextWord) +
-                    textWidth(this.text[i]) +
-                    cursor.x > this.LINE_WRAP_X_POS) {
-                    this.#wrapCursor(cursor)
-                }
-            }
+            this.#handleNewLines(i, cursor)
         }
 
-        this.#showCurrentWordBar(CHAR_POS)
-        this.#showCursor(CHAR_POS)
+        // this.#showCurrentWordBar(CHAR_POS)
+        this.#showTextCursor(CHAR_POS)
+    }
+
+
+    /**
+     * wraps text in this passage by sending the cursor position back to the
+     * left margin if we are about to exceed the right margin
+     * @param i index of the current character in the passage
+     * @param cursor the current position of the text cursor
+     */
+    #handleNewLines(i, cursor) {
+        /* wrap to handle newlines → needs additional code in keyPressed */
+        if (this.text[i] === '\n')
+            this.#wrapCursor(cursor)
+
+        /** if we're at a whitespace, determine if we need a new line:
+         find the next whitespace; the word between us and that
+         whitespace is the next word. if the width of that word + our
+         cursor + current space > limit, then newline
+         */
+        if (this.text[i] === ' ') {
+            let ndi = this.text.indexOf(" ", i+1) // next delimiter index
+            let nextWord = this.text.substring(i+1, ndi)
+
+            if (textWidth(nextWord) +
+                textWidth(this.text[i]) +
+                cursor.x > this.LINE_WRAP_X_POS) {
+                this.#wrapCursor(cursor)
+            }
+        }
     }
 
 
@@ -90,7 +100,7 @@ class Passage {
      * @param positions list of positions for every character we are
      * displaying in this passage
      */
-    #showCursor(positions) {
+    #showTextCursor(positions) {
         fill(0, 0, 100)
         /* TODO check if we're finished, otherwise we try to read [index+1] */
         rect(
@@ -111,15 +121,33 @@ class Passage {
     #showCurrentWordBar (positions) {
         fill(0, 0, 80, 30) // gray
 
-        let ndi = min( /* ndi = 'next delimiter index */
-            this.text.indexOf(' ', this.index),
-            this.text.indexOf('\n', this.index)
-        )
+        /* indexOf returns -1 if not found, so we need a special case */
+        let indexOfNextSpace = this.text.indexOf(' ', this.index)
+        let indexOfNextNewline = this.text.indexOf('\n', this.index)
+        const nextNewlineNotFound = (indexOfNextNewline === -1)
+        const nextSpaceNotFound = (indexOfNextSpace === -1)
 
-        let pdi = max( /* pdi = 'previous delimiter index */
+        if (nextNewlineNotFound)
+            indexOfNextNewline = this.text.length-1
+        if (nextSpaceNotFound)
+            indexOfNextSpace = this.text.length-1
+
+        let ndi /* next delimiter index */
+        if (nextNewlineNotFound && nextSpaceNotFound) {
+            ndi = this.text.length-1
+        } else {
+            ndi = min(
+            this.text.indexOf(' ', this.index),
+            this.text.indexOf('\n', this.index))
+        }
+
+        const pdi = max( /* pdi = 'previous delimiter index */
             this.text.lastIndexOf(' ', this.index),
             this.text.lastIndexOf('\n', this.index)
         )
+
+        console.log(ndi)
+        DEBUG_TEXT = `pdf+1→${pdi+1}, ndi→${ndi}`
 
         /* +1: we don't want the line to go over the previous delimiter char */
         rect(
@@ -166,6 +194,12 @@ class Passage {
     }
 
 
+    /** have we reached the end of the passage text? */
+    finished() {
+        return this.index === this.text.length-1
+    }
+
+
     // set the current char to correct
     // TODO block on errors not supported
     setCorrect() {
@@ -175,10 +209,11 @@ class Passage {
             // do nothing
         } else {
             this.correctList.push(true)
-            this.incrementIndex()
+            if (!this.finished())
+                this.incrementIndex()
         }
 
-        console.assert(this.correctList.length === this.index)
+        // console.assert(this.correctList.length === this.index)
     }
 
 
@@ -197,14 +232,15 @@ class Passage {
 
                 current code doesn't block on errors
              */
-
-            this.incrementIndex()
+            if (!this.finished())
+                this.incrementIndex()
         }
     }
 
 
     incrementIndex() {
-        this.index += 1
+        if (this.index < this.text.length -1)
+            this.index += 1
     }
 
 
