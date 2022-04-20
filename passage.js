@@ -18,9 +18,9 @@ class Passage {
         this.lastIncorrectIndex = -1
         this.TEXT_ALPHA = 100
 
-        this.TOP_MARGIN = 50
-        this.LEFT_MARGIN = 30
-        this.RIGHT_MARGIN = 300
+        this.TOP_MARGIN = 100
+        this.LEFT_MARGIN = 100
+        this.RIGHT_MARGIN = 100
         this.HIGHLIGHT_PADDING = 5
         this.HIGHLIGHT_BOX_HEIGHT = 0 /* to be set dynamically later */
 
@@ -32,6 +32,14 @@ class Passage {
     // renders this passage using vectors instead of constant offsets
     render() {
         noStroke()
+
+        fill(0, 0, 0, 50)
+        rect(
+            this.LEFT_MARGIN/2,
+            this.TOP_MARGIN/2,
+            width-this.LEFT_MARGIN,
+            height-this.TOP_MARGIN,
+            6)
 
         /* needs to be redeclared because constructor is invoked before
          textAscent / descent are valid */
@@ -131,7 +139,7 @@ class Passage {
      * displaying in this passage
      */
     #showCurrentWordBar (positions) {
-        fill(0, 0, 80, 30) // gray
+        fill(0, 0, 80, 100) // gray
 
         /* indexOf returns -1 if not found, so we need a special case */
         let indexOfNextSpace = this.text.indexOf(' ', this.index)
@@ -183,9 +191,10 @@ class Passage {
         /* only show highlight boxes for chars we've already typed */
         if (index < this.index) { /*  */
             if (this.correctList[index])
-                fill(94, 100, 90, 15) /* green for correct */
+                // fill(94, 100, 90, 30) /* green for correct */
+                fill(0, 0, 100, 40)
             else
-                fill(0, 100, 100, 20) /* red for incorrect */
+                fill(0, 100, 100, 40) /* red for incorrect */
 
             let highlightTopLeftCorner = new p5.Vector(
                 cursor.x,

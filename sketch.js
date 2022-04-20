@@ -16,23 +16,29 @@ let incorrectSound /* audio cue for typing one char incorrectly */
 let scryfall /* json file from scryfall: set=snc */
 let cardImg
 let currentCardIndex
+let cards /* packed up JSON data */
+
+const ART_CROP_WIDTH = 626
+const ART_CROP_HEIGHT = 457
+const FONT_SIZE = 24
 
 function preload() {
     font = loadFont('data/consola.ttf')
+    // font = loadFont('data/lucida-console.ttf')
     scryfall = loadJSON('json/scryfall-snc.json')
-    cardImg = loadImage('img/boon.png')
 }
 
 
 function setup() {
-    let cnv = createCanvas(939, 685)
+    let cnv = createCanvas(ART_CROP_WIDTH*1.5, ART_CROP_HEIGHT*1.5)
     cnv.parent('#canvas')
     colorMode(HSB, 360, 100, 100, 100)
 
     /* initialize instruction div */
     instructions = select('#ins')
     instructions.html(`<pre>
-        [1,2,3,4,5] → no function
+        change collector's number with numpad keys!
+        🥝 [4:-1, 6:+1, 8:+10, 2:-10] 🌊
         numpad 1 → freeze sketch</pre>`)
 
     colorMode(HSB, 360, 100, 100, 100)
@@ -43,25 +49,19 @@ function setup() {
     // passage = new Passage('When Backup Agent enters the battlefield, put a' +
     //     ' +1/+1 counter on target creature.\n1/1\n')
 
-    currentCardIndex = 150
-    let cards = getCardData()
+    cards = getCardData()
     cards.sort(sortCardsByID)
-    for (const card of cards) {
-        // console.log(`${card.collector_number}→${card.name}`)
-    }
-
-    passage = new Passage(cards[currentCardIndex].typeText)
-    cardImg = loadImage(cards[currentCardIndex].art_crop_uri) /* 626x457 */
-    console.log(cards[currentCardIndex].art_crop_uri)
+    currentCardIndex = int(random(0, cards.length))
+    updateCard()
 }
 
 
 function draw() {
     background(234, 34, 24)
-    textFont(font, 24)
+    textFont(font, FONT_SIZE)
 
-    cardImg.resize(939, 0)
-    tint(0, 0, 100, 20)
+    cardImg.resize(ART_CROP_WIDTH*1.5, 0)
+    tint(0, 0, 100)
     image(cardImg, 0, 0) /* 626x457 */
 
     passage.render()
@@ -150,26 +150,59 @@ function keyPressed() {
         return
     }
 
-    /* temporary hack for handling enter key */
-    if (keyCode === ENTER) {
-        processTypedKey('\n')
-        return
-    }
-
-    /* handle emdash by allowing dash to replace it */
-    if (key === '-') {
-        processTypedKey('—')
-        return
-    }
-
-    processTypedKey(key)
-
     /* stop sketch on numpad1 */
-    if (keyCode === 97) {
+    if (keyCode === 97) { /* numpad 1 */
         noLoop()
         instructions.html(`<pre>
             sketch stopped</pre>`)
+    } else if (keyCode === 100) { /* numpad 4 */
+        currentCardIndex--
+        currentCardIndex = constrain(currentCardIndex, 0, cards.length-1)
+        updateCard()
+    } else if (keyCode === 102) { /* numpad 6 */
+        currentCardIndex++
+        currentCardIndex = constrain(currentCardIndex, 0, cards.length-1)
+        updateCard()
+    } else if (keyCode === 104) { /* numpad 8 */
+        currentCardIndex += 10
+        currentCardIndex = constrain(currentCardIndex, 0, cards.length-1)
+        updateCard()
+    } else if (keyCode === 98) { /* numpad 2 */
+        currentCardIndex -= 10
+        currentCardIndex = constrain(currentCardIndex, 0, cards.length-1)
+        updateCard()
+    } else if (keyCode === 101) { /* numpad 5 */
+        currentCardIndex = int(random(0, cards.length))
+        console.log(currentCardIndex)
+        updateCard()
+    } else {
+        /* temporary hack for handling enter key */
+        if (keyCode === ENTER) {
+            processTypedKey('\n')
+            return
+        }
+
+        /* handle emdash by allowing dash to replace it */
+        if (key === '-') {
+            processTypedKey('—')
+            return
+        }
+
+        if (key === '*') {
+            processTypedKey('•')
+            return
+        }
+
+        processTypedKey(key)
     }
+}
+
+
+function updateCard() {
+    passage = new Passage(cards[currentCardIndex].typeText)
+    cardImg = loadImage(cards[currentCardIndex].art_crop_uri)
+    console.log(cards[currentCardIndex].typeText)
+    DEBUG_TEXT = currentCardIndex
 }
 
 
