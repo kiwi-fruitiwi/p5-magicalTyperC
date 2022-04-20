@@ -15,6 +15,7 @@ let incorrectSound /* audio cue for typing one char incorrectly */
 
 let scryfall /* json file from scryfall: set=snc */
 let cardImg
+let currentCardIndex
 
 function preload() {
     font = loadFont('data/consola.ttf')
@@ -24,7 +25,7 @@ function preload() {
 
 
 function setup() {
-    let cnv = createCanvas(960, 640)
+    let cnv = createCanvas(939, 685)
     cnv.parent('#canvas')
     colorMode(HSB, 360, 100, 100, 100)
 
@@ -42,24 +43,28 @@ function setup() {
     // passage = new Passage('When Backup Agent enters the battlefield, put a' +
     //     ' +1/+1 counter on target creature.\n1/1\n')
 
+    currentCardIndex = 150
     let cards = getCardData()
     cards.sort(sortCardsByID)
     for (const card of cards) {
         // console.log(`${card.collector_number}→${card.name}`)
     }
 
-    passage = new Passage(cards[150].typeText)
+    passage = new Passage(cards[currentCardIndex].typeText)
+    cardImg = loadImage(cards[currentCardIndex].art_crop_uri) /* 626x457 */
+    console.log(cards[currentCardIndex].art_crop_uri)
 }
 
 
 function draw() {
     background(234, 34, 24)
     textFont(font, 24)
-    passage.render()
 
-    cardImg.resize(240, 0)
-    tint(0, 0, 100, 75)
-    image(cardImg, 690, 15)
+    cardImg.resize(939, 0)
+    tint(0, 0, 100, 20)
+    image(cardImg, 0, 0) /* 626x457 */
+
+    passage.render()
     displayDebugCorner()
 }
 

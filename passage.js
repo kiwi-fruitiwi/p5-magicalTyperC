@@ -16,6 +16,7 @@ class Passage {
          TODO this currently does not work because we skip incorrect chars :p
          */
         this.lastIncorrectIndex = -1
+        this.TEXT_ALPHA = 100
 
         this.TOP_MARGIN = 50
         this.LEFT_MARGIN = 30
@@ -50,7 +51,7 @@ class Passage {
             this.#showHighlightBox(i, cursor)
 
             /* draw current letter; greater z-index than highlightBox */
-            fill(0, 0, 100, 70)
+            fill(0, 0, 100, this.TEXT_ALPHA)
             text(this.text[i], cursor.x, cursor.y)
 
             /* modify cursor position to where the next letter should be;
