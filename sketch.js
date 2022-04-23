@@ -62,6 +62,7 @@ function draw() {
 
     cardImg.resize(ART_CROP_WIDTH*1.5, 0)
     tint(0, 0, 100)
+
     image(cardImg, 0, 0) /* 626x457 */
 
     passage.render()
@@ -96,13 +97,17 @@ function getCardData() {
 
         /* sometimes p/t don't exist. check type */
         if (creature.test(key['type_line']))
-            typeText += `${key['power']}/${key['toughness']}`
+            typeText += `${key['power']}/${key['toughness']}\n`
             /* we need whitespace at end for passage end detection to work */
+
+        if (key['flavor_text'])
+            typeText += `\n${key['flavor_text']}\n`
+        else typeText += '\n'
 
         /* only display commons and uncommons in our color filter */
         if (rarity.test(key['rarity'])) {
             results.push({
-                'typeText': typeText + '\n',
+                'typeText': typeText,
                 'name': key.name,
                 'collector_number': int(key['collector_number']),
                 'art_crop_uri': key['image_uris']['art_crop'],
@@ -157,19 +162,15 @@ function keyPressed() {
             sketch stopped</pre>`)
     } else if (keyCode === 100) { /* numpad 4 */
         currentCardIndex--
-        currentCardIndex = constrain(currentCardIndex, 0, cards.length-1)
         updateCard()
     } else if (keyCode === 102) { /* numpad 6 */
         currentCardIndex++
-        currentCardIndex = constrain(currentCardIndex, 0, cards.length-1)
         updateCard()
     } else if (keyCode === 104) { /* numpad 8 */
         currentCardIndex += 10
-        currentCardIndex = constrain(currentCardIndex, 0, cards.length-1)
         updateCard()
     } else if (keyCode === 98) { /* numpad 2 */
         currentCardIndex -= 10
-        currentCardIndex = constrain(currentCardIndex, 0, cards.length-1)
         updateCard()
     } else if (keyCode === 101) { /* numpad 5 */
         currentCardIndex = int(random(0, cards.length))
@@ -199,6 +200,7 @@ function keyPressed() {
 
 
 function updateCard() {
+    currentCardIndex = constrain(currentCardIndex, 0, cards.length-1)
     passage = new Passage(cards[currentCardIndex].typeText)
     cardImg = loadImage(cards[currentCardIndex].art_crop_uri)
     console.log(cards[currentCardIndex].typeText)
