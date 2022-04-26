@@ -19,8 +19,8 @@ class Passage {
         this.TEXT_ALPHA = 100
 
         this.TOP_MARGIN = 100
-        this.LEFT_MARGIN = 100
-        this.RIGHT_MARGIN = 100
+        this.LEFT_MARGIN = 64
+        this.RIGHT_MARGIN = 420
         this.HIGHLIGHT_PADDING = 5
         this.HIGHLIGHT_BOX_HEIGHT = 0 /* to be set dynamically later */
 
@@ -33,13 +33,13 @@ class Passage {
     render() {
         noStroke()
 
-        fill(0, 0, 0, 50)
-        rect(
+        fill(0, 0, 100, 2)
+        rect( /* transparent UI element our passage sits on */
             this.LEFT_MARGIN/2,
             this.TOP_MARGIN/2,
-            width-this.LEFT_MARGIN,
+            width-this.LEFT_MARGIN-this.RIGHT_MARGIN,
             height-this.TOP_MARGIN,
-            6)
+            10)
 
         /* needs to be redeclared because constructor is invoked before
          textAscent / descent are valid */

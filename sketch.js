@@ -2,7 +2,7 @@
  *  @author kiwi
  *  @date 2022.04.16
  *
- *  ☐ extract info for one card and put together typing 'level'
+ *  ☒ extract info for one card and put together typing 'level'
  *
  */
 let font
@@ -20,7 +20,12 @@ let cards /* packed up JSON data */
 
 const ART_CROP_WIDTH = 626
 const ART_CROP_HEIGHT = 457
-const FONT_SIZE = 24
+const FONT_SIZE = 20
+
+let dc
+let milk
+let sleepLeftMilliseconds = 0;
+const game = cardURIGenerator();
 
 function preload() {
     font = loadFont('data/consola.ttf')
@@ -30,18 +35,20 @@ function preload() {
 
 
 function setup() {
-    let cnv = createCanvas(ART_CROP_WIDTH*1.5, ART_CROP_HEIGHT*1.5)
+    let cnv = createCanvas(1280, 640)
     cnv.parent('#canvas')
     colorMode(HSB, 360, 100, 100, 100)
+
+    milk = color(207, 7, 99)
+    dc = drawingContext
 
     /* initialize instruction div */
     instructions = select('#ins')
     instructions.html(`<pre>
-        change collector's number with numpad keys!
-        🥝 [4:-1, 6:+1, 8:+10, 2:-10] 🌊
         numpad 1 → freeze sketch</pre>`)
 
-    colorMode(HSB, 360, 100, 100, 100)
+    /* change collector's number with numpad keys! */
+    /* 🥝 [4:-1, 6:+1, 8:+10, 2:-10] 🌊 */
 
     correctSound = loadSound('data/correct.wav')
     incorrectSound = loadSound('data/incorrect.wav')
@@ -56,17 +63,47 @@ function setup() {
 }
 
 
+function resetDcShadow() {
+    dc.shadowBlur = 0
+    dc.shadowOffsetY = 0
+    dc.shadowOffsetX = 0
+}
+
+
 function draw() {
     background(234, 34, 24)
     textFont(font, FONT_SIZE)
 
-    cardImg.resize(ART_CROP_WIDTH*1.5, 0)
+    cardImg.resize(360, 0)
     tint(0, 0, 100)
 
-    image(cardImg, 0, 0) /* 626x457 */
+    dc.shadowBlur = 24
+    dc.shadowColor = milk
+    image(cardImg, width-360-40, 100-30) /* 626x457 */
+    resetDcShadow()
 
     passage.render()
     displayDebugCorner()
+
+    sleepLeftMilliseconds -= deltaTime;
+    if (sleepLeftMilliseconds <= 0) {
+        sleepLeftMilliseconds = game.next().value;
+    }
+}
+
+
+function* cardURIGenerator() {
+    console.log('[ INFO ] starting generator!');
+    let cardPngImg
+
+    for (let i=0; i<cards.length; i++) {
+        cardPngImg = loadImage(cards[i].art_crop_uri)
+        yield 1000;
+        // image(cardPngImg, width/2, height/2)
+        cardPngImg.save(`${cards[i].collector_number} ${cards[i].name} crop`)
+        console.log(cards[i].png_uri)
+
+    }
 }
 
 
@@ -111,7 +148,7 @@ function getCardData() {
                 'name': key.name,
                 'collector_number': int(key['collector_number']),
                 'art_crop_uri': key['image_uris']['art_crop'],
-                'png_uri': key['image_uris']['png']
+                'png_uri': key['image_uris']['png'] /* 745x1040 */
             })
             count++
 
@@ -199,10 +236,12 @@ function keyPressed() {
 }
 
 
+/** selects a new card based on the currentCardIndex; displays its image and
+ associated typing passage */
 function updateCard() {
     currentCardIndex = constrain(currentCardIndex, 0, cards.length-1)
     passage = new Passage(cards[currentCardIndex].typeText)
-    cardImg = loadImage(cards[currentCardIndex].art_crop_uri)
+    cardImg = loadImage(cards[currentCardIndex].png_uri)
     console.log(cards[currentCardIndex].typeText)
     DEBUG_TEXT = currentCardIndex
 }
