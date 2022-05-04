@@ -83,8 +83,9 @@ function draw() {
     resetDcShadow()
 
     passage.render()
+
     displayDebugCorner()
-    invokeCardGenerator()
+    // invokeCardGenerator()
 }
 
 
@@ -129,7 +130,7 @@ function getCardData() {
     let data = scryfall['data']
 
     /* regex for detecting creatures and common/uncommon rarity */
-    let creature = new RegExp('[Cc]reature')
+    let creature = new RegExp('[Cc]reature|Vehicle')
     let rarity = new RegExp('(common|uncommon)')
     let count = 0
     let typeText = ''
