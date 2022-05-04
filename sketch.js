@@ -84,7 +84,12 @@ function draw() {
 
     passage.render()
     displayDebugCorner()
+    invokeCardGenerator()
+}
 
+
+/** call this in the draw loop to invoke cardURIGenerator to save cards */
+function invokeCardGenerator() {
     sleepLeftMilliseconds -= deltaTime;
     if (sleepLeftMilliseconds <= 0) {
         sleepLeftMilliseconds = game.next().value;
@@ -92,17 +97,17 @@ function draw() {
 }
 
 
+/** saves scryfall magic card images to the browser default download location */
 function* cardURIGenerator() {
     console.log('[ INFO ] starting generator!');
     let cardPngImg
 
     for (let i=0; i<cards.length; i++) {
-        cardPngImg = loadImage(cards[i].art_crop_uri)
-        yield 1000;
+        cardPngImg = loadImage(cards[i].normal_uri)
+        yield 1500;
         // image(cardPngImg, width/2, height/2)
-        cardPngImg.save(`${cards[i].collector_number} ${cards[i].name} crop`)
-        console.log(cards[i].png_uri)
-
+        cardPngImg.save(`${cards[i].collector_number} ${cards[i].name}.jpg`)
+        console.log(cards[i].name)
     }
 }
 
@@ -147,8 +152,12 @@ function getCardData() {
                 'typeText': typeText,
                 'name': key.name,
                 'collector_number': int(key['collector_number']),
-                'art_crop_uri': key['image_uris']['art_crop'],
+                'art_crop_uri': key['image_uris']['art_crop'], /*626x457 ½ MB*/
+                'normal_uri': key['image_uris']['normal'],
+                'large_uri': key['image_uris']['large'],
                 'png_uri': key['image_uris']['png'] /* 745x1040 */
+
+                /* normal 488x680 64KB, large 672x936 100KB png 745x1040 1MB*/
             })
             count++
 
