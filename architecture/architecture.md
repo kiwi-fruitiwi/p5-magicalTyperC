@@ -18,9 +18,28 @@ and use it!
 
 
 
-
 ## Main loop in sketch.js
-    preload → loadJSON
+
+We could use the callback parameter in loadJSON, but loading in `preload()` 
+is simpler.
+```js
+function preload() {
+    font = loadFont('data/consola.ttf')
+    scryfall = loadJSON('json/scryfall-snc.json')
+}
+```
+
+Our main loop is fairly simple: we ask the passage to render itself.
+
+```js
+function draw() {
+    background(234, 34, 24)
+    passage.render()
+}
+```
+
+ 
+Unfinished notes:   
 
     setup → 
         load sounds
@@ -41,7 +60,7 @@ and use it!
     processTypedKey(k) ← check if typed char matches current passage char
         decide what to do if correct vs incorrect
 
-## passage.js
+## Typing UI in passage.js
     constructor → instance fields
         text: our passage text. in this case, it's the typeText of the card
         passageIndex: index of char we're typing in our passage
