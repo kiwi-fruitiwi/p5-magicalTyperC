@@ -69,6 +69,6 @@ and use it!
     setIncorrect()
     advance() ← if !this.finished(): this.index+=1
     
-    '''js
-        function advance()
-    '''
+```js
+   function advance()
+```
