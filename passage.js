@@ -20,7 +20,7 @@ class Passage {
 
         this.TOP_MARGIN = 100
         this.LEFT_MARGIN = 64
-        this.RIGHT_MARGIN = 420
+        this.RIGHT_MARGIN = 440
         this.HIGHLIGHT_PADDING = 5
         this.HIGHLIGHT_BOX_HEIGHT = 0 /* to be set dynamically later */
 
@@ -34,11 +34,15 @@ class Passage {
         noStroke()
 
         fill(0, 0, 100, 2)
+        const hPadding = this.LEFT_MARGIN/2
+        const vPadding = this.TOP_MARGIN/2
+
         rect( /* transparent UI element our passage sits on */
-            this.LEFT_MARGIN/2,
-            this.TOP_MARGIN/2,
-            width-this.LEFT_MARGIN-this.RIGHT_MARGIN,
-            height-this.TOP_MARGIN,
+            /* extend rectangle around our boundaries */
+            this.LEFT_MARGIN - hPadding,
+            this.TOP_MARGIN - vPadding,
+            width-this.LEFT_MARGIN-this.RIGHT_MARGIN + 2*hPadding,
+            height, /* just extend through the bottom */
             10)
 
         /* needs to be redeclared because constructor is invoked before

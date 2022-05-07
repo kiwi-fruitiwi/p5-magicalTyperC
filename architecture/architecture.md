@@ -87,7 +87,3 @@ Unfinished notes:
     setCorrect() ← this.correctList.push(true); this.advance()
     setIncorrect()
     advance() ← if !this.finished(): this.index+=1
-    
-```js
-   function advance()
-```

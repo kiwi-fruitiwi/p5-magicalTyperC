@@ -74,12 +74,15 @@ function draw() {
     background(234, 34, 24)
     textFont(font, FONT_SIZE)
 
-    cardImg.resize(360, 0)
+    const IMG_WIDTH = 340
+    cardImg.resize(IMG_WIDTH, 0)
     tint(0, 0, 100)
 
     dc.shadowBlur = 24
     dc.shadowColor = milk
-    image(cardImg, width-360-40, 100-30) /* 626x457 */
+
+    const hPadding = passage.LEFT_MARGIN/2
+    image(cardImg, width-IMG_WIDTH-hPadding, 100-30) /* 626x457 */
     resetDcShadow()
 
     passage.render()
