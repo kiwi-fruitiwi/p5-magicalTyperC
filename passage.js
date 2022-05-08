@@ -64,14 +64,19 @@ class Passage {
 
         this.#showCurrentWordBar(CHAR_POS)
         this.#showTextCursor(CHAR_POS)
+        this.#showBoundingBox(CHAR_POS)
+    }
 
-
-        /** show the bounding box */
+    /** show the bounding box
+     *  @param positions a list of all displayed character positions (BLC)
+     *  BLC = bottom left corner coordinates
+     */
+    #showBoundingBox(positions) {
         fill(0, 0, 100, 2)
-        const padding = this.LEFT_MARGIN/2
+        const padding = this.LEFT_MARGIN / 2
 
         /* 'box' refers to the bounding box we want to draw */
-        const lowestBoxPoint = CHAR_POS[CHAR_POS.length-1].y + textDescent() + padding
+        const lowestBoxPoint = positions[positions.length - 1].y + textDescent() + padding
         const highestBoxPoint = this.TOP_MARGIN - textAscent() - padding
 
         /** (LEFT_MARGIN, TOP_MARGIN) describes where the cursor's start
@@ -84,11 +89,10 @@ class Passage {
             /* extend rectangle around our boundaries */
             this.LEFT_MARGIN - padding,
             highestBoxPoint,
-            width-this.LEFT_MARGIN-this.RIGHT_MARGIN + 2*padding,
+            width - this.LEFT_MARGIN - this.RIGHT_MARGIN + 2 * padding,
             lowestBoxPoint - highestBoxPoint, /* just extend through the bottom */
             10)
     }
-
 
     /**
      * wraps text in this passage by sending the cursor position back to the
