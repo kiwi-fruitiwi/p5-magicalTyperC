@@ -82,7 +82,9 @@ function draw() {
     dc.shadowColor = milk
 
     const hPadding = passage.LEFT_MARGIN/2
-    image(cardImg, width-IMG_WIDTH-hPadding, 100-30) /* 626x457 */
+    const vPadding = passage.TOP_MARGIN
+    let jitter = 0 /*sin(frameCount / 30) * 15*/
+    image(cardImg, width-IMG_WIDTH-hPadding+jitter, vPadding/2 + 20) /* 626x457 */
     resetDcShadow()
 
     passage.render()

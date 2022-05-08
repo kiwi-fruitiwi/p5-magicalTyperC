@@ -33,18 +33,6 @@ class Passage {
     render() {
         noStroke()
 
-        fill(0, 0, 100, 2)
-        const hPadding = this.LEFT_MARGIN/2
-        const vPadding = this.TOP_MARGIN/2
-
-        rect( /* transparent UI element our passage sits on */
-            /* extend rectangle around our boundaries */
-            this.LEFT_MARGIN - hPadding,
-            this.TOP_MARGIN - vPadding,
-            width-this.LEFT_MARGIN-this.RIGHT_MARGIN + 2*hPadding,
-            height, /* just extend through the bottom */
-            10)
-
         /* needs to be redeclared because constructor is invoked before
          textAscent / descent are valid */
         this.HIGHLIGHT_BOX_HEIGHT = textAscent() + textDescent() +
@@ -76,6 +64,29 @@ class Passage {
 
         this.#showCurrentWordBar(CHAR_POS)
         this.#showTextCursor(CHAR_POS)
+
+
+        /** show the bounding box */
+        fill(0, 0, 100, 2)
+        const padding = this.LEFT_MARGIN/2
+
+        /* 'box' refers to the bounding box we want to draw */
+        const lowestBoxPoint = CHAR_POS[CHAR_POS.length-1].y + textDescent() + padding
+        const highestBoxPoint = this.TOP_MARGIN - textAscent() - padding
+
+        /** (LEFT_MARGIN, TOP_MARGIN) describes where the cursor's start
+         *  position is. But the cursor is the bottom left of the letter not
+         *  including textDescent. To get the true top margin we'd have to
+         *  add textAscent and a little extra.
+         */
+
+        rect( /* transparent UI element our passage sits on */
+            /* extend rectangle around our boundaries */
+            this.LEFT_MARGIN - padding,
+            highestBoxPoint,
+            width-this.LEFT_MARGIN-this.RIGHT_MARGIN + 2*padding,
+            lowestBoxPoint - highestBoxPoint, /* just extend through the bottom */
+            10)
     }
 
 
