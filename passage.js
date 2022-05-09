@@ -52,7 +52,15 @@ class Passage {
 
             /* draw current letter; greater z-index than highlightBox */
             fill(0, 0, 100, this.TEXT_ALPHA)
+            strokeWeight(0)
             text(this.text[i], cursor.x, cursor.y)
+            if (this.text[i] === '\n') {
+                push()
+                translate(0, 1/4*textAscent()) /* translate down to char base */
+                this.#drawReturnGlyph(cursor, textWidth('m')*.85)
+                pop()
+            }
+            strokeWeight(0)
 
             /* modify cursor position to where the next letter should be;
                each highlight box should be 1 pixel bigger on left and right
@@ -65,6 +73,38 @@ class Passage {
         this.#showCurrentWordBar(CHAR_POS)
         this.#showTextCursor(CHAR_POS)
         this.#showBoundingBox(CHAR_POS)
+    }
+
+    #drawReturnGlyph(cursor, w) {
+        /* draw return character with a combination of beginShape and triangle */
+        let transparentWhite = color(0, 0, 100, 70)
+        let gray = color(0, 0, 75)
+        stroke(gray)
+        strokeWeight(2)
+        strokeJoin(ROUND)
+
+        const x = cursor.x
+        const y = cursor.y
+        const h = w*2 /* draw in a 1x2 block, so 2w=h */
+        const r = w/6 /* 'height' from arrowhead base to its point */
+
+        const stemTop = new p5.Vector(x+3/4*w, y-7/8*h)
+        const stemBottom = new p5.Vector(x+3/4*w, y-1/4*h)
+        const arrowheadTip = new p5.Vector(x+w/4, y-h/4)
+
+        // fill(transparentWhite)
+        triangle( /* arrowhead */
+            arrowheadTip.x, arrowheadTip.y, /* point tip */
+            arrowheadTip.x+r, arrowheadTip.y + r/sqrt(3),
+            arrowheadTip.x+r, arrowheadTip.y - r/sqrt(3)
+        )
+
+        noFill()
+        beginShape()
+        vertex(stemTop.x, stemTop.y)
+        vertex(stemBottom.x, stemBottom.y)
+        vertex(arrowheadTip.x+r, arrowheadTip.y)
+        endShape()
     }
 
     /** show the bounding box

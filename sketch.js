@@ -141,7 +141,12 @@ function getCardData() {
     let typeText = ''
 
     for (let key of data) {
-        typeText = `${key.name} ${key['mana_cost']}\n${key['type_line']}\n${key['oracle_text']}\n`
+        /* if mana value is 0, skip displaying the space */
+        let manaCost = key['mana_cost']
+        if (manaCost !== '')
+            manaCost = ' ' + manaCost
+
+        typeText = `${key.name}${manaCost}\n${key['type_line']}\n${key['oracle_text']}\n`
 
         /* sometimes p/t don't exist. check type */
         if (creature.test(key['type_line']))
