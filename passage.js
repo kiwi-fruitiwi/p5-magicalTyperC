@@ -57,7 +57,7 @@ class Passage {
             if (this.text[i] === '\n') {
                 push()
                 translate(0, 1/4*textAscent()) /* translate down to char base */
-                this.#drawReturnGlyph(cursor, textWidth('m')*.85)
+                this.#drawReturnGlyph(cursor, textWidth('m') * .85)
                 pop()
             }
             strokeWeight(0)
@@ -73,6 +73,59 @@ class Passage {
         this.#showCurrentWordBar(CHAR_POS)
         this.#showTextCursor(CHAR_POS)
         this.#showBoundingBox(CHAR_POS)
+        this.#showProgressBar(CHAR_POS)
+    }
+
+    /**
+     * returns the y-coordinate of the furthest extent of the typing bounding
+     * box.
+     * @param positions list of positions of every character in the passage text
+     */
+    #getLowestBoxPoint(positions) {
+        const padding = this.LEFT_MARGIN / 2
+        return positions[positions.length - 1].y + textDescent() + padding
+    }
+
+    /**
+     * draws a progress bar at the bottom of the typing area
+     * @param positions
+     * TODO: overshooting arrival behavior for bouncy physics
+     */
+    #showProgressBar(positions) {
+        const transparentGray = color(0, 0, 100, 50)
+        stroke(transparentGray)
+        strokeJoin()
+
+        const barHeight = 4
+        strokeWeight(barHeight-2) /* height of support line */
+        const lowestBoxPoint = this.#getLowestBoxPoint(positions)
+        const pbSupport = lowestBoxPoint - 5 /* progress bar sits on top of me*/
+
+        /* bottom boundary of typing area */
+        const rightBoundary = width - this.RIGHT_MARGIN
+        line(this.LEFT_MARGIN, pbSupport, rightBoundary, pbSupport)
+
+        /* actual progress bar's main transparent line */
+        strokeWeight(barHeight) /* height of support line */
+        const transparentBlue = color(210, 100, 100, 60)
+        stroke(transparentBlue)
+        const endWidth = 5 /* leading opaque rectangle's width in progressBar */
+        const progress = map(
+            this.index, 0, this.text.length-1,
+            this.LEFT_MARGIN, rightBoundary)
+
+        line(this.LEFT_MARGIN, pbSupport-barHeight,
+            progress, pbSupport-barHeight)
+
+        /* progress bar's opaque end */
+        const opaqueBlue = color(210, 100, 100, 100)
+        stroke(opaqueBlue)
+
+        let progressHeaderStartX = progress - 5
+        progressHeaderStartX = constrain(progressHeaderStartX,
+            this.LEFT_MARGIN, rightBoundary)
+        line(progressHeaderStartX, pbSupport-barHeight,
+            progress, pbSupport-barHeight)
     }
 
     #drawReturnGlyph(cursor, w) {
@@ -116,7 +169,7 @@ class Passage {
         const padding = this.LEFT_MARGIN / 2
 
         /* 'box' refers to the bounding box we want to draw */
-        const lowestBoxPoint = positions[positions.length - 1].y + textDescent() + padding
+        const lowestBoxPoint = this.#getLowestBoxPoint(positions)
         const highestBoxPoint = this.TOP_MARGIN - textAscent() - padding
 
         /** (LEFT_MARGIN, TOP_MARGIN) describes where the cursor's start
