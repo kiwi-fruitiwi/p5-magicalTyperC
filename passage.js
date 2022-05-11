@@ -25,6 +25,7 @@ class Passage {
         this.RIGHT_MARGIN = 440
         this.HIGHLIGHT_PADDING = 5
         this.LINE_SPACING = 5 /* spacing between lines */
+        this.lastLineVPadding = 5 /* extra vertical padding on final line */
         this.HIGHLIGHT_BOX_HEIGHT = 0 /* to be set dynamically later */
 
         /* this is the horizontal coordinate where we must text wrap */
@@ -99,7 +100,7 @@ class Passage {
         // this.#showBoundingBox(CHAR_POS)
         this.#drawViewPort()
         this.#showProgressBar(CHAR_POS)
-        this.#scrollDown(CHAR_POS, 1)
+        this.#scrollDown(CHAR_POS, this.linesShown)
     }
 
 
@@ -114,7 +115,8 @@ class Passage {
         const initialY = this.originalCursorPos.y
         DEBUG_TEXT = `${cursor} ← ${initialY+lineHeight}`
 
-        if (cursor.y > initialY + lineHeight*(n-1)) {
+        /*  */
+        if (cursor.y > initialY + lineHeight*n) {
             this.yScrollOffset -= lineHeight
         }
     }
@@ -122,12 +124,15 @@ class Passage {
 
     /**
      * returns the y-coordinate of the furthest extent of the typing bounding
-     * box. todo: this will be a fixed height when scrolling is implemented
-     * @param positions list of positions of every character in the passage text
+     * box. this is a function of how many lines of text we're displaying.
      */
-    #getLowestBoxPoint(positions) {
-        const padding = this.LEFT_MARGIN / 2
-        return positions[positions.length - 1].y + textDescent() + padding
+    #getLowestBoxPoint() {
+        /* lastY no longer needed now that we can scroll */
+        // const lastY = charPos[charPos.length - 1].y + textDescent() + padding
+
+        const yStart = this.TOP_MARGIN + textDescent() + this.HIGHLIGHT_PADDING
+        const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
+        return yStart + this.linesShown*lineHeight + this.lastLineVPadding
     }
 
 
@@ -142,7 +147,8 @@ class Passage {
 
         const barHeight = 4
         strokeWeight(barHeight-2) /* height of support line */
-        const lowestBoxPoint = this.#getLowestBoxPoint(positions)
+        const vPadding = 15
+        const lowestBoxPoint = this.#getLowestBoxPoint(positions) + vPadding
         const pbSupport = lowestBoxPoint - 5 /* progress bar sits on top of me*/
 
         /* bottom boundary of typing area */
@@ -218,7 +224,7 @@ class Passage {
         this.#showViewPortBackgroundColor()
 
         const padding = this.LEFT_MARGIN / 2
-        const lowestBoxPoint = 400 /* todo → needs to be ?*lineHeight */
+        const lowestBoxPoint = this.#getLowestBoxPoint()
         const highestBoxPoint = this.TOP_MARGIN - textAscent() - padding
 
         /** (LEFT_MARGIN, TOP_MARGIN) describes where the cursor's start

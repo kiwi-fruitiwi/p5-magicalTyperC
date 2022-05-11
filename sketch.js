@@ -20,7 +20,7 @@ let cards /* packed up JSON data */
 
 const ART_CROP_WIDTH = 626
 const ART_CROP_HEIGHT = 457
-const FONT_SIZE = 20
+const FONT_SIZE = 32
 
 let dc
 let milk /* used for magicCard glow */
@@ -75,7 +75,7 @@ function draw() {
     textFont(font, FONT_SIZE)
 
     passage.render()
-    passage.displayRowMarkers(5)
+    // passage.displayRowMarkers(5)
 
     displayDebugCorner()
     // invokeCardGenerator()
