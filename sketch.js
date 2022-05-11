@@ -138,8 +138,9 @@ function getCardData() {
     let data = scryfall['data']
 
     /* regex for detecting creatures and common/uncommon rarity */
-    let creature = new RegExp('[Cc]reature|Vehicle')
-    let rarity = new RegExp('(common|uncommon)')
+    const creature = new RegExp('[Cc]reature|Vehicle')
+    // const rarity = new RegExp('(common|uncommon)')
+    const rarity = new RegExp('(rare|mythic)')
     let count = 0
     let typeText = ''
 

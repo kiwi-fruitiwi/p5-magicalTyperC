@@ -11,7 +11,8 @@ class Passage {
         this.index = 0 /* where in the passage we're currently typing */
         this.correctList = [] /* booleans recording character correctness */
         this.yScrollOffset = 0
-        this.linesShown = 2 /* lines displayed before scrolling up */
+        this.linesShown = 4 /* lines displayed other than 1st before scrolling
+         up */
 
         /*  keep track of where we last got a character incorrect; use this
          to prevent marking a previously incorrect char correct once we succeed.
@@ -24,7 +25,7 @@ class Passage {
         this.LEFT_MARGIN = 64
         this.RIGHT_MARGIN = 440
         this.HIGHLIGHT_PADDING = 5
-        this.LINE_SPACING = 5 /* spacing between lines */
+        this.LINE_SPACING = 8 /* spacing between lines */
         this.lastLineVPadding = 5 /* extra vertical padding on final line */
         this.HIGHLIGHT_BOX_HEIGHT = 0 /* to be set dynamically later */
 
@@ -115,8 +116,8 @@ class Passage {
         const initialY = this.originalCursorPos.y
         DEBUG_TEXT = `${cursor} ← ${initialY+lineHeight}`
 
-        /*  */
-        if (cursor.y > initialY + lineHeight*n) {
+        /* n-1 because by default we show the first line */
+        if (cursor.y >= initialY + lineHeight*(n-1)) {
             this.yScrollOffset -= lineHeight
         }
     }
@@ -132,7 +133,7 @@ class Passage {
 
         const yStart = this.TOP_MARGIN + textDescent() + this.HIGHLIGHT_PADDING
         const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
-        return yStart + this.linesShown*lineHeight + this.lastLineVPadding
+        return yStart + (this.linesShown-1)*lineHeight + this.lastLineVPadding
     }
 
 
@@ -223,9 +224,10 @@ class Passage {
     #drawViewPort() {
         this.#showViewPortBackgroundColor()
 
-        const padding = this.LEFT_MARGIN / 2
+        const hPadding = this.LEFT_MARGIN / 4
+        const vPadding = this.HIGHLIGHT_PADDING + this.LINE_SPACING
         const lowestBoxPoint = this.#getLowestBoxPoint()
-        const highestBoxPoint = this.TOP_MARGIN - textAscent() - padding
+        const highestBoxPoint = this.TOP_MARGIN - textAscent() - vPadding
 
         /** (LEFT_MARGIN, TOP_MARGIN) describes where the cursor's start
          *  position is. But the cursor is the bottom left of the letter, not
@@ -244,10 +246,10 @@ class Passage {
 
         /* interior part of shape, counter-clockwise winding */
         beginContour()
-        vertex(width-this.RIGHT_MARGIN+padding, highestBoxPoint) /* top right */
-        vertex(this.LEFT_MARGIN-padding, highestBoxPoint) /* top left */
-        vertex(this.LEFT_MARGIN-padding, lowestBoxPoint) /* bottom left */
-        vertex(width-this.RIGHT_MARGIN+padding, lowestBoxPoint) /* bottom
+        vertex(width-this.RIGHT_MARGIN+hPadding, highestBoxPoint) /* top right */
+        vertex(this.LEFT_MARGIN-hPadding, highestBoxPoint) /* top left */
+        vertex(this.LEFT_MARGIN-hPadding, lowestBoxPoint) /* bottom left */
+        vertex(width-this.RIGHT_MARGIN+hPadding, lowestBoxPoint) /* bottom
          right */
         endContour()
         endShape(CLOSE)
