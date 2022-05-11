@@ -8,12 +8,13 @@
 class Passage {
     constructor(text) {
         this.text = text
-        this.index = 0 // where in the passage we're currently typing
-        this.correctList = [] // booleans recording character correctness
+        this.index = 0 /* where in the passage we're currently typing */
+        this.correctList = [] /* booleans recording character correctness */
+        this.yScrollOffset = 0
 
         /*  keep track of where we last got a character incorrect; use this
          to prevent marking a previously incorrect char correct once we succeed.
-         TODO this currently does not work because we skip incorrect chars :p
+         TODO currently unused because we don't block on incorrectly typed keys
          */
         this.lastIncorrectIndex = -1
         this.TEXT_ALPHA = 100
@@ -29,7 +30,7 @@ class Passage {
     }
 
 
-    // renders this passage using vectors instead of constant offsets
+    /* renders this passage using vectors instead of constant offsets */
     render() {
         noStroke()
 
@@ -42,7 +43,8 @@ class Passage {
         let CHAR_POS = []
 
         /* bottom left corner of the current letter we are about to type */
-        let cursor = new p5.Vector(this.LEFT_MARGIN, this.TOP_MARGIN)
+        let cursor = new p5.Vector(this.LEFT_MARGIN,
+            this.TOP_MARGIN + this.yScrollOffset)
 
         /* iterate through every char in this passage */
         for (let i=0; i<this.text.length; i++) {
@@ -76,15 +78,17 @@ class Passage {
         this.#showProgressBar(CHAR_POS)
     }
 
+
     /**
      * returns the y-coordinate of the furthest extent of the typing bounding
-     * box.
+     * box. todo: this will be a fixed height when scrolling is implemented
      * @param positions list of positions of every character in the passage text
      */
     #getLowestBoxPoint(positions) {
         const padding = this.LEFT_MARGIN / 2
         return positions[positions.length - 1].y + textDescent() + padding
     }
+
 
     /**
      * draws a progress bar at the bottom of the typing area
@@ -94,7 +98,6 @@ class Passage {
     #showProgressBar(positions) {
         const transparentGray = color(0, 0, 100, 50)
         stroke(transparentGray)
-        strokeJoin()
 
         const barHeight = 4
         strokeWeight(barHeight-2) /* height of support line */
@@ -128,6 +131,8 @@ class Passage {
             progress, pbSupport-barHeight)
     }
 
+
+    /** draws the carriage return symbol  */
     #drawReturnGlyph(cursor, w) {
         /* draw return character with a combination of beginShape and triangle */
         let transparentWhite = color(0, 0, 100, 70)
@@ -160,6 +165,7 @@ class Passage {
         endShape()
     }
 
+
     /** show the bounding box
      *  @param positions a list of all displayed character positions (BLC)
      *  BLC = bottom left corner coordinates
@@ -186,6 +192,7 @@ class Passage {
             lowestBoxPoint - highestBoxPoint, /* just extend through the bottom */
             10)
     }
+
 
     /**
      * wraps text in this passage by sending the cursor position back to the
@@ -304,9 +311,9 @@ class Passage {
         if (index < this.index) { /*  */
             if (this.correctList[index])
                 // fill(94, 100, 90, 30) /* green for correct */
-                fill(0, 0, 100, 40)
+                fill(0, 0, 100, 20)
             else
-                fill(0, 100, 100, 40) /* red for incorrect */
+                fill(0, 100, 100, 20) /* red for incorrect */
 
             let highlightTopLeftCorner = new p5.Vector(
                 cursor.x,
