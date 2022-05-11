@@ -84,10 +84,13 @@ function draw() {
     const hPadding = passage.LEFT_MARGIN/2
     const vPadding = passage.TOP_MARGIN
     let jitter = 0 /*sin(frameCount / 30) * 15*/
-    image(cardImg, width-IMG_WIDTH-hPadding+jitter, vPadding/2 + 20) /* 626x457 */
+
+    /* 626x457 */
+    image(cardImg, width-IMG_WIDTH-hPadding+jitter, vPadding/2 + 20)
     resetDcShadow()
 
     passage.render()
+    passage.displayRowMarkers(5)
 
     displayDebugCorner()
     // invokeCardGenerator()
@@ -195,9 +198,11 @@ function displayDebugCorner() {
     fill(0, 0, 100, 100) /* white */
     strokeWeight(0)
 
-    text(`→ ${DEBUG_TEXT}`, LEFT_MARGIN, DEBUG_Y_OFFSET)
     text(`frameCount: ${frameCount}`,
+        LEFT_MARGIN, DEBUG_Y_OFFSET - 2*LINE_HEIGHT)
+    text(`set id: ${currentCardIndex}`,
         LEFT_MARGIN, DEBUG_Y_OFFSET - LINE_HEIGHT)
+    text(`→ ${DEBUG_TEXT}`, LEFT_MARGIN, DEBUG_Y_OFFSET)
     // text(`frameRate: ${frameRate().toFixed(1)}`,
     //     LEFT_MARGIN, DEBUG_Y_OFFSET)
 }
@@ -263,7 +268,6 @@ function updateCard() {
     passage = new Passage(cards[currentCardIndex].typeText)
     cardImg = loadImage(cards[currentCardIndex].png_uri)
     console.log(cards[currentCardIndex].typeText)
-    DEBUG_TEXT = currentCardIndex
 }
 
 

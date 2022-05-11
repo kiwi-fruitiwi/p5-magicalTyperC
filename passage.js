@@ -11,6 +11,7 @@ class Passage {
         this.index = 0 /* where in the passage we're currently typing */
         this.correctList = [] /* booleans recording character correctness */
         this.yScrollOffset = 0
+        this.linesShown = 2 /* lines displayed before scrolling up */
 
         /*  keep track of where we last got a character incorrect; use this
          to prevent marking a previously incorrect char correct once we succeed.
@@ -23,6 +24,7 @@ class Passage {
         this.LEFT_MARGIN = 64
         this.RIGHT_MARGIN = 440
         this.HIGHLIGHT_PADDING = 5
+        this.LINE_SPACING = 5 /* spacing between lines */
         this.HIGHLIGHT_BOX_HEIGHT = 0 /* to be set dynamically later */
 
         /* this is the horizontal coordinate where we must text wrap */
@@ -30,7 +32,20 @@ class Passage {
     }
 
 
-    /* renders this passage using vectors instead of constant offsets */
+    /** displays a small dot at the cursor location of each row */
+    displayRowMarkers(n) {
+        strokeWeight(2)
+        stroke(90, 100, 100, 75)
+
+        const yStart = this.TOP_MARGIN + textDescent() + this.HIGHLIGHT_PADDING
+        const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
+
+        for (let i=0; i<n; i++)
+            point(this.LEFT_MARGIN, yStart + lineHeight*i)
+    }
+
+
+    /** renders this passage using vectors instead of constant offsets */
     render() {
         noStroke()
 
@@ -76,6 +91,14 @@ class Passage {
         this.#showTextCursor(CHAR_POS)
         this.#showBoundingBox(CHAR_POS)
         this.#showProgressBar(CHAR_POS)
+        this.#scrollDown(CHAR_POS)
+    }
+
+
+    #scrollDown(positions) { /* set yScrollOffset when we type enough */
+        const cursor = positions[this.index]
+        DEBUG_TEXT = cursor
+
     }
 
 
@@ -331,7 +354,7 @@ class Passage {
 
 
     #wrapCursor(cursor) { /* mutate cursor coordinates to wrap */
-        cursor.y += this.HIGHLIGHT_BOX_HEIGHT + 5
+        cursor.y += this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
         cursor.x = this.LEFT_MARGIN /* don't forget to wrap the x ᴖᴥᴖ */
     }
 
