@@ -23,7 +23,7 @@ const ART_CROP_HEIGHT = 457
 const FONT_SIZE = 20
 
 let dc
-let milk
+let milk /* used for magicCard glow */
 let sleepLeftMilliseconds = 0;
 const game = cardURIGenerator();
 
@@ -71,8 +71,14 @@ function resetDcShadow() {
 
 
 function draw() {
-    background(234, 34, 24)
+    background(passage.cBackground)
     textFont(font, FONT_SIZE)
+
+    passage.render()
+    passage.displayRowMarkers(5)
+
+    displayDebugCorner()
+    // invokeCardGenerator()
 
     const IMG_WIDTH = 340
     cardImg.resize(IMG_WIDTH, 0)
@@ -88,12 +94,6 @@ function draw() {
     /* 626x457 */
     image(cardImg, width-IMG_WIDTH-hPadding+jitter, vPadding/2 + 20)
     resetDcShadow()
-
-    passage.render()
-    passage.displayRowMarkers(5)
-
-    displayDebugCorner()
-    // invokeCardGenerator()
 }
 
 

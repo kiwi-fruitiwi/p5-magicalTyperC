@@ -29,6 +29,13 @@ class Passage {
 
         /* this is the horizontal coordinate where we must text wrap */
         this.LINE_WRAP_X_POS = width - this.RIGHT_MARGIN
+
+        /* save original x,y position of cursor */
+        this.originalCursorPos = new p5.Vector(this.LEFT_MARGIN,this.TOP_MARGIN)
+
+        /* colors */
+        this.cBackground = color(234, 34, 24)
+        this.cBoundingBox = color(0, 0, 100, 2)
     }
 
 
@@ -89,16 +96,27 @@ class Passage {
 
         this.#showCurrentWordBar(CHAR_POS)
         this.#showTextCursor(CHAR_POS)
-        this.#showBoundingBox(CHAR_POS)
+        // this.#showBoundingBox(CHAR_POS)
+        this.#drawViewPort()
         this.#showProgressBar(CHAR_POS)
-        this.#scrollDown(CHAR_POS)
+        this.#scrollDown(CHAR_POS, 1)
     }
 
 
-    #scrollDown(positions) { /* set yScrollOffset when we type enough */
+    /**
+     * scroll the passage down by a line every time we type to n lines
+     * @param positions positions of characters todo ← maybe just cursor.y
+     * @param n number lines lines to show before scrolling
+     */
+    #scrollDown(positions, n) {
         const cursor = positions[this.index]
-        DEBUG_TEXT = cursor
+        const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
+        const initialY = this.originalCursorPos.y
+        DEBUG_TEXT = `${cursor} ← ${initialY+lineHeight}`
 
+        if (cursor.y > initialY + lineHeight*(n-1)) {
+            this.yScrollOffset -= lineHeight
+        }
     }
 
 
@@ -189,12 +207,52 @@ class Passage {
     }
 
 
+    /** shows light background behind typing box */
+    #showViewPortBackgroundColor() {
+        fill(this.cBoundingBox)
+        rect(0, 0, width, height)
+    }
+
+    /** use beginContour to create negative typing viewport */
+    #drawViewPort() {
+        this.#showViewPortBackgroundColor()
+
+        const padding = this.LEFT_MARGIN / 2
+        const lowestBoxPoint = 400 /* todo → needs to be ?*lineHeight */
+        const highestBoxPoint = this.TOP_MARGIN - textAscent() - padding
+
+        /** (LEFT_MARGIN, TOP_MARGIN) describes where the cursor's start
+         *  position is. But the cursor is the bottom left of the letter, not
+         *  including textDescent. To get the true top margin we'd have to
+         *  add textAscent and a little extra.
+         *
+         *
+         */
+
+        fill(this.cBackground)
+        beginShape() /* exterior part of shape, clockwise winding */
+        vertex(0, 0) /* top left */
+        vertex(width, 0) /* top right */
+        vertex(width, height) /* bottom right */
+        vertex(0, height) /* bottom left */
+
+        /* interior part of shape, counter-clockwise winding */
+        beginContour()
+        vertex(width-this.RIGHT_MARGIN+padding, highestBoxPoint) /* top right */
+        vertex(this.LEFT_MARGIN-padding, highestBoxPoint) /* top left */
+        vertex(this.LEFT_MARGIN-padding, lowestBoxPoint) /* bottom left */
+        vertex(width-this.RIGHT_MARGIN+padding, lowestBoxPoint) /* bottom
+         right */
+        endContour()
+        endShape(CLOSE)
+    }
+
     /** show the bounding box
      *  @param positions a list of all displayed character positions (BLC)
      *  BLC = bottom left corner coordinates
      */
     #showBoundingBox(positions) {
-        fill(0, 0, 100, 2)
+        fill(this.cBoundingBox)
         const padding = this.LEFT_MARGIN / 2
 
         /* 'box' refers to the bounding box we want to draw */
