@@ -8,6 +8,7 @@
 let font
 let instructions
 let DEBUG_TEXT
+let DEBUG_TEXT_2
 
 let passage
 let correctSound /* audio cue for typing one char correctly */
@@ -200,9 +201,10 @@ function displayDebugCorner() {
     strokeWeight(0)
 
     text(`frameCount: ${frameCount}`,
-        LEFT_MARGIN, DEBUG_Y_OFFSET - 2*LINE_HEIGHT)
+        LEFT_MARGIN, DEBUG_Y_OFFSET - 3*LINE_HEIGHT)
     text(`set id: ${currentCardIndex}`,
-        LEFT_MARGIN, DEBUG_Y_OFFSET - LINE_HEIGHT)
+        LEFT_MARGIN, DEBUG_Y_OFFSET - 2*LINE_HEIGHT)
+    text(`→ ${DEBUG_TEXT_2}`, LEFT_MARGIN, DEBUG_Y_OFFSET - LINE_HEIGHT)
     text(`→ ${DEBUG_TEXT}`, LEFT_MARGIN, DEBUG_Y_OFFSET)
     // text(`frameRate: ${frameRate().toFixed(1)}`,
     //     LEFT_MARGIN, DEBUG_Y_OFFSET)

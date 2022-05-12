@@ -10,15 +10,11 @@ class Passage {
         this.text = text
         this.index = 0 /* where in the passage we're currently typing */
         this.correctList = [] /* booleans recording character correctness */
-        this.yScrollOffset = 0
-        this.linesShown = 4 /* lines displayed other than 1st before scrolling
-         up */
+        this.linesShown = 3 /* lines displayed; scroll to see more */
 
-        /*  keep track of where we last got a character incorrect; use this
-         to prevent marking a previously incorrect char correct once we succeed.
-         TODO currently unused because we don't block on incorrectly typed keys
-         */
-        this.lastIncorrectIndex = -1
+        this.yScrollOffset = 0 /* helps scroll passage down */
+        this.yScroll = new Vehicle(0, 0)
+
         this.TEXT_ALPHA = 100
 
         this.TOP_MARGIN = 100
@@ -68,7 +64,7 @@ class Passage {
 
         /* bottom left corner of the current letter we are about to type */
         let cursor = new p5.Vector(this.LEFT_MARGIN,
-            this.TOP_MARGIN + this.yScrollOffset)
+            this.TOP_MARGIN + this.yScroll.pos.y)
 
         /* iterate through every char in this passage */
         for (let i=0; i<this.text.length; i++) {
@@ -102,6 +98,10 @@ class Passage {
         this.#drawViewPort()
         this.#showProgressBar(CHAR_POS)
         this.#scrollDown(CHAR_POS, this.linesShown)
+
+
+        this.yScroll.update()
+        this.yScroll.returnHome(this.HIGHLIGHT_BOX_HEIGHT)
     }
 
 
@@ -115,10 +115,13 @@ class Passage {
         const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
         const initialY = this.originalCursorPos.y
         DEBUG_TEXT = `${cursor} ← ${initialY+lineHeight}`
+        DEBUG_TEXT_2 = `yScroll: ${this.yScroll.pos.y.toFixed(2)}, yS Target: ${this.yScroll.target.y}`
 
         /* n-1 because by default we show the first line */
         if (cursor.y >= initialY + lineHeight*(n-1)) {
-            this.yScrollOffset -= lineHeight
+            this.yScroll.target.y -= lineHeight
+            this.yScroll.pos.y -= 1 /* prevent multiple executions in draw */
+            // console.log(`${cursor.y} vs ${this.yScroll.target.y}`)
         }
     }
 
