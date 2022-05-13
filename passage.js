@@ -11,7 +11,7 @@ class Passage {
         this.index = 0 /* where in the passage we're currently typing */
         this.correctList = [] /* booleans recording character correctness */
 
-        this.linesToShow = 3 /* lines displayed; scroll to see more */
+        this.linesToShow = 7 /* lines displayed; scroll to see more */
         this.yScroll = new Vehicle(0, 0) /* helps scroll passage down */
         this.lines = 0 /* total lines. likely unnecessary */
         this.linesScrolled = 0 /* how many lines have we scrolled? */
@@ -107,8 +107,6 @@ class Passage {
 
         this.yScroll.update()
         this.yScroll.returnHome(this.HIGHLIGHT_BOX_HEIGHT)
-
-        DEBUG_TEXT_2 = `lines scrolled: ${this.linesScrolled}`
     }
 
 
@@ -133,7 +131,6 @@ class Passage {
             else break
         }
 
-        DEBUG_TEXT = `${linesWrappedUpToCursor}`
         const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
 
         if (linesWrappedUpToCursor - this.linesScrolled > this.linesToShow-2) {

@@ -7,8 +7,8 @@
  */
 let font
 let instructions
-let DEBUG_TEXT
-let DEBUG_TEXT_2
+let DEBUG_TEXT = ''
+let DEBUG_TEXT_2 = ''
 
 let passage
 let correctSound /* audio cue for typing one char correctly */
@@ -161,6 +161,8 @@ function getCardData() {
         if (key['flavor_text'])
             typeText += `\n${key['flavor_text']}\n`
         else typeText += '\n'
+
+        typeText += ' ' /* extra space makes user able to hit 'enter' at end*/
 
         /* only display commons and uncommons in our color filter */
         if (rarity.test(key['rarity'])) {
