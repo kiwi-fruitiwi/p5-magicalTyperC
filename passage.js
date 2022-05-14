@@ -10,12 +10,12 @@ class Passage {
         this.text = text
         this.index = 0 /* where in the passage we're currently typing */
         this.correctList = [] /* booleans recording character correctness */
-        this.linesShown = 3 /* lines displayed; scroll to see more */
 
+        this.linesToShow = 3 /* lines displayed; scroll to see more */
         this.yScroll = new Vehicle(0, 0) /* helps scroll passage down */
-        this.lines = 0
+        this.lines = 0 /* total lines. likely unnecessary */
         this.linesScrolled = 0 /* how many lines have we scrolled? */
-        this.lineWrapIndices = []
+        this.lineWrapIndices = [] /* indices where passage wrapped the line */
 
         this.TEXT_ALPHA = 100
 
@@ -72,7 +72,7 @@ class Passage {
         let ccp = new p5.Vector(this.LEFT_MARGIN,
             this.TOP_MARGIN + this.yScroll.pos.y)
 
-        /* iterate through every char in this passage */
+        /* iterate through every char in this passage and display it */
         for (let i=0; i<this.text.length; i++) {
             /* save the position every character for later */
             charPositions.push(ccp.copy())
@@ -103,10 +103,10 @@ class Passage {
         // this.#showBoundingBox(CHAR_POS)
         this.#drawViewPort()
         this.#showProgressBar(charPositions)
-        this.#scrollDown(charPositions, this.linesShown)
+        this.#scrollDown(charPositions, this.linesToShow)
 
-        // this.yScroll.update()
-        // this.yScroll.returnHome(this.HIGHLIGHT_BOX_HEIGHT)
+        this.yScroll.update()
+        this.yScroll.returnHome(this.HIGHLIGHT_BOX_HEIGHT)
 
         DEBUG_TEXT_2 = `lines scrolled: ${this.linesScrolled}`
     }
@@ -134,17 +134,11 @@ class Passage {
         }
 
         DEBUG_TEXT = `${linesWrappedUpToCursor}`
-
-        const cursor = positions[this.index]
         const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
-        const initialY = this.originalCursorPos.y
 
-        /* n-1 because by default we show the first line */
-        if (cursor.y >= initialY + lineHeight*(n-1)) {
-            /* arrive behavior introduces a delay to scrolling */
-            this.linesScrolled += 1
-            this.yScroll.pos.y = -lineHeight * this.linesScrolled
-            console.log(`${cursor.y} vs ${this.yScroll.target.y}`)
+        if (linesWrappedUpToCursor - this.linesScrolled > this.linesToShow-2) {
+            this.linesScrolled++
+            this.yScroll.target.y = -lineHeight * this.linesScrolled
         }
     }
 
@@ -159,7 +153,7 @@ class Passage {
 
         const yStart = this.TOP_MARGIN + textDescent() + this.HIGHLIGHT_PADDING
         const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
-        return yStart + (this.linesShown-1)*lineHeight + this.lastLineVPadding
+        return yStart + (this.linesToShow-1)*lineHeight + this.lastLineVPadding
     }
 
 
