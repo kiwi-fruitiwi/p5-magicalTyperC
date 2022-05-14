@@ -64,26 +64,28 @@ class Passage {
             2*this.HIGHLIGHT_PADDING
 
         /* position list for every displayed char, used for current word bar */
-        let CHAR_POS = []
+        let charPositions = []
 
         /* bottom left corner of the current letter we are about to type */
-        let cursor = new p5.Vector(this.LEFT_MARGIN,
+        /* this is the 'current character position' when iterating through
+         chars in passage.text */
+        let ccp = new p5.Vector(this.LEFT_MARGIN,
             this.TOP_MARGIN + this.yScroll.pos.y)
 
         /* iterate through every char in this passage */
         for (let i=0; i<this.text.length; i++) {
             /* save the position every character for later */
-            CHAR_POS.push(cursor.copy())
-            this.#showHighlightBox(i, cursor)
+            charPositions.push(ccp.copy())
+            this.#showHighlightBox(i, ccp)
 
             /* draw current letter; greater z-index than highlightBox */
             fill(0, 0, 100, this.TEXT_ALPHA)
             strokeWeight(0)
-            text(this.text[i], cursor.x, cursor.y)
+            text(this.text[i], ccp.x, ccp.y)
             if (this.text[i] === '\n') {
                 push()
                 translate(0, 1/4*textAscent()) /* translate down to char base */
-                this.#drawReturnGlyph(cursor, textWidth('m') * .85)
+                this.#drawReturnGlyph(ccp, textWidth('m') * .85)
                 pop()
             }
             strokeWeight(0)
@@ -92,16 +94,16 @@ class Passage {
                each highlight box should be 1 pixel bigger on left and right
                1+1=2 total pixels of extra width
              */
-            cursor.x += textWidth(this.text[i]) + 2 // 2 = HORIZONTAL_PADDING
-            this.#handleNewLines(i, cursor)
+            ccp.x += textWidth(this.text[i]) + 2 // 2 = HORIZONTAL_PADDING
+            this.#handleNewLines(i, ccp)
         }
 
-        this.#showCurrentWordBar(CHAR_POS)
-        this.#showTextCursor(CHAR_POS)
+        this.#showCurrentWordBar(charPositions)
+        this.#showTextCursor(charPositions)
         // this.#showBoundingBox(CHAR_POS)
         this.#drawViewPort()
-        this.#showProgressBar(CHAR_POS)
-        this.#scrollDown(CHAR_POS, this.linesShown)
+        this.#showProgressBar(charPositions)
+        this.#scrollDown(charPositions, this.linesShown)
 
         // this.yScroll.update()
         // this.yScroll.returnHome(this.HIGHLIGHT_BOX_HEIGHT)
