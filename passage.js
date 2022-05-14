@@ -15,6 +15,7 @@ class Passage {
         this.yScroll = new Vehicle(0, 0) /* helps scroll passage down */
         this.lines = 0
         this.linesScrolled = 0 /* how many lines have we scrolled? */
+        this.lineWrapIndices = []
 
         this.TEXT_ALPHA = 100
 
@@ -55,6 +56,7 @@ class Passage {
     render() {
         noStroke()
         this.lines = 0 /* count lines per render */
+        this.lineWrapIndices = [] /* per render, record where we wrap lines */
 
         /* needs to be redeclared because constructor is invoked before
          textAscent / descent are valid */
@@ -104,7 +106,7 @@ class Passage {
         // this.yScroll.update()
         // this.yScroll.returnHome(this.HIGHLIGHT_BOX_HEIGHT)
 
-        DEBUG_TEXT = `lines at each render cycle → ${this.lines}`
+        DEBUG_TEXT = `${this.lineWrapIndices}`
         DEBUG_TEXT_2 = `lines scrolled: ${this.linesScrolled}`
     }
 
@@ -298,7 +300,7 @@ class Passage {
     #handleNewLines(i, cursor) {
         /* wrap to handle newlines → needs additional code in keyPressed */
         if (this.text[i] === '\n')
-            this.#wrapCursor(cursor)
+            this.#wrapCursor(cursor, i)
 
         /** if we're at a whitespace, determine if we need a new line:
          find the next whitespace; the word between us and that
@@ -323,7 +325,7 @@ class Passage {
 
             if (textWidth(nextWord) + textWidth(this.text[i]) + cursor.x >
                 this.LINE_WRAP_X_POS) {
-                this.#wrapCursor(cursor)
+                this.#wrapCursor(cursor, i)
             }
         }
     }
@@ -425,10 +427,10 @@ class Passage {
     }
 
 
-    #wrapCursor(cursor) { /* mutate cursor coordinates to wrap */
+    #wrapCursor(cursor, index) { /* mutate cursor coordinates to wrap */
         cursor.y += this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
         cursor.x = this.LEFT_MARGIN /* don't forget to wrap the x ᴖᴥᴖ */
-        this.lines += 1
+        this.lineWrapIndices.push(index)
     }
 
 
