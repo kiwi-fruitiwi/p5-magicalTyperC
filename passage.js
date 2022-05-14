@@ -106,7 +106,6 @@ class Passage {
         // this.yScroll.update()
         // this.yScroll.returnHome(this.HIGHLIGHT_BOX_HEIGHT)
 
-        DEBUG_TEXT = `${this.lineWrapIndices}`
         DEBUG_TEXT_2 = `lines scrolled: ${this.linesScrolled}`
     }
 
@@ -117,6 +116,23 @@ class Passage {
      * @param n number lines lines to show before scrolling
      */
     #scrollDown(positions, n) {
+        /* how many lines have been wrapped up until our current typing spot?
+         * → set linesWrappedUpToCursor = 0
+         * → iterate through this.lineWrapIndices at end of render loop
+         *      if this.index > lineWrapIndices[i]: lwutc++
+         *      else break
+         */
+        let linesWrappedUpToCursor = 0
+
+        /* note lineWrapIndices contains indices where passage has wrapped */
+        for (let index of this.lineWrapIndices) {
+            if (this.index > index)
+                linesWrappedUpToCursor++
+            else break
+        }
+
+        DEBUG_TEXT = `${linesWrappedUpToCursor}`
+
         const cursor = positions[this.index]
         const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
         const initialY = this.originalCursorPos.y
