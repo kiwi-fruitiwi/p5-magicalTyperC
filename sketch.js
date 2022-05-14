@@ -140,8 +140,8 @@ function getCardData() {
 
     /* regex for detecting creatures and common/uncommon rarity */
     const creature = new RegExp('[Cc]reature|Vehicle')
-    // const rarity = new RegExp('(common|uncommon)')
-    const rarity = new RegExp('(rare|mythic)')
+    const rarity = new RegExp('(common|uncommon)')
+    // const rarity = new RegExp('(rare|mythic)')
     let count = 0
     let typeText = ''
 

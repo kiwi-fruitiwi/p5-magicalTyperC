@@ -14,6 +14,7 @@ class Passage {
 
         this.yScrollOffset = 0 /* helps scroll passage down */
         this.yScroll = new Vehicle(0, 0)
+        this.lines = 0
 
         this.TEXT_ALPHA = 100
 
@@ -53,6 +54,7 @@ class Passage {
     /** renders this passage using vectors instead of constant offsets */
     render() {
         noStroke()
+        this.lines = 0 /* count lines per render */
 
         /* needs to be redeclared because constructor is invoked before
          textAscent / descent are valid */
@@ -99,9 +101,9 @@ class Passage {
         this.#showProgressBar(CHAR_POS)
         this.#scrollDown(CHAR_POS, this.linesShown)
 
-
         this.yScroll.update()
         this.yScroll.returnHome(this.HIGHLIGHT_BOX_HEIGHT)
+        DEBUG_TEXT = `lines at each render cycle → ${this.lines}`
     }
 
 
@@ -114,14 +116,19 @@ class Passage {
         const cursor = positions[this.index]
         const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
         const initialY = this.originalCursorPos.y
-        DEBUG_TEXT = `${cursor} ← ${initialY+lineHeight}`
-        DEBUG_TEXT_2 = `yScroll: ${this.yScroll.pos.y.toFixed(2)}, yS Target: ${this.yScroll.target.y}`
+        // DEBUG_TEXT = `${cursor} ← ${initialY+lineHeight}`
+        // DEBUG_TEXT_2 = `yScroll: ${this.yScroll.pos.y.toFixed(2)}, yS
+        // Target: ${this.yScroll.target.y}`
 
         /* n-1 because by default we show the first line */
-        if (cursor.y >= initialY + lineHeight*(n-1)) {
+        if ((this.lastScrolledIndex !== this.index) &&
+            (cursor.y >= initialY + lineHeight*(n-1))) {
+
+            /* arrive behavior introduces a delay to scrolling. we must
+             ensure we don't scroll twice at the same index */
+            this.lastScrolledIndex = this.index
             this.yScroll.target.y -= lineHeight
-            this.yScroll.pos.y -= 1 /* prevent multiple executions in draw */
-            // console.log(`${cursor.y} vs ${this.yScroll.target.y}`)
+            console.log(`${cursor.y} vs ${this.yScroll.target.y}`)
         }
     }
 
@@ -425,6 +432,7 @@ class Passage {
     #wrapCursor(cursor) { /* mutate cursor coordinates to wrap */
         cursor.y += this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
         cursor.x = this.LEFT_MARGIN /* don't forget to wrap the x ᴖᴥᴖ */
+        this.lines += 1
     }
 
 
