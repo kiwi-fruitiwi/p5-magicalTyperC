@@ -12,9 +12,9 @@ class Passage {
         this.correctList = [] /* booleans recording character correctness */
         this.linesShown = 3 /* lines displayed; scroll to see more */
 
-        this.yScrollOffset = 0 /* helps scroll passage down */
-        this.yScroll = new Vehicle(0, 0)
+        this.yScroll = new Vehicle(0, 0) /* helps scroll passage down */
         this.lines = 0
+        this.linesScrolled = 0 /* how many lines have we scrolled? */
 
         this.TEXT_ALPHA = 100
 
@@ -101,9 +101,11 @@ class Passage {
         this.#showProgressBar(CHAR_POS)
         this.#scrollDown(CHAR_POS, this.linesShown)
 
-        this.yScroll.update()
-        this.yScroll.returnHome(this.HIGHLIGHT_BOX_HEIGHT)
+        // this.yScroll.update()
+        // this.yScroll.returnHome(this.HIGHLIGHT_BOX_HEIGHT)
+
         DEBUG_TEXT = `lines at each render cycle → ${this.lines}`
+        DEBUG_TEXT_2 = `lines scrolled: ${this.linesScrolled}`
     }
 
 
@@ -116,18 +118,12 @@ class Passage {
         const cursor = positions[this.index]
         const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
         const initialY = this.originalCursorPos.y
-        // DEBUG_TEXT = `${cursor} ← ${initialY+lineHeight}`
-        // DEBUG_TEXT_2 = `yScroll: ${this.yScroll.pos.y.toFixed(2)}, yS
-        // Target: ${this.yScroll.target.y}`
 
         /* n-1 because by default we show the first line */
-        if ((this.lastScrolledIndex !== this.index) &&
-            (cursor.y >= initialY + lineHeight*(n-1))) {
-
-            /* arrive behavior introduces a delay to scrolling. we must
-             ensure we don't scroll twice at the same index */
-            this.lastScrolledIndex = this.index
-            this.yScroll.target.y -= lineHeight
+        if (cursor.y >= initialY + lineHeight*(n-1)) {
+            /* arrive behavior introduces a delay to scrolling */
+            this.linesScrolled += 1
+            this.yScroll.pos.y = -lineHeight * this.linesScrolled
             console.log(`${cursor.y} vs ${this.yScroll.target.y}`)
         }
     }
