@@ -7,8 +7,8 @@
  */
 let font
 let instructions
-let DEBUG_TEXT = ''
-let DEBUG_TEXT_2 = ''
+
+let debugMsgList = ['','','','',''] /* defaults to 5 empty strings */
 
 let passage
 let correctSound /* audio cue for typing one char correctly */
@@ -74,6 +74,9 @@ function resetDcShadow() {
 function draw() {
     background(passage.cBackground)
     textFont(font, FONT_SIZE)
+
+    setDebugText(`frameCount: ${frameCount}`, 4)
+    setDebugText(`set id: ${currentCardIndex}`, 3)
 
     passage.render()
     // passage.displayRowMarkers(5)
@@ -191,6 +194,13 @@ function getCardData() {
 }
 
 
+function setDebugText(text, index) {
+    if (index >= 5) {
+        debugMsgList[0] = `${index} ← debug index > 4 not supported`
+    } else debugMsgList[index] = text
+}
+
+
 /** 🧹 shows debugging info using text() 🧹 */
 function displayDebugCorner() {
     textFont(font, 14)
@@ -202,14 +212,10 @@ function displayDebugCorner() {
     fill(0, 0, 100, 100) /* white */
     strokeWeight(0)
 
-    text(`frameCount: ${frameCount}`,
-        LEFT_MARGIN, DEBUG_Y_OFFSET - 3*LINE_HEIGHT)
-    text(`set id: ${currentCardIndex}`,
-        LEFT_MARGIN, DEBUG_Y_OFFSET - 2*LINE_HEIGHT)
-    text(`→ ${DEBUG_TEXT_2}`, LEFT_MARGIN, DEBUG_Y_OFFSET - LINE_HEIGHT)
-    text(`→ ${DEBUG_TEXT}`, LEFT_MARGIN, DEBUG_Y_OFFSET)
-    // text(`frameRate: ${frameRate().toFixed(1)}`,
-    //     LEFT_MARGIN, DEBUG_Y_OFFSET)
+    for (let index in debugMsgList) {
+        const msg = debugMsgList[index]
+        text(msg, LEFT_MARGIN, DEBUG_Y_OFFSET - LINE_HEIGHT * index)
+    }
 }
 
 

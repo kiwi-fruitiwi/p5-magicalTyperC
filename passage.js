@@ -382,7 +382,7 @@ class Passage {
         /* 'next delimiter index', 'previous delimiter index' */
         const ndi = min(indexOfNextSpace, indexOfNextNewline)
         const pdi = max(indexOfLastSpace, indexOfLastNewline)
-        // DEBUG_TEXT = `pdf+1→${pdi+1}, ndi→${ndi}`
+        setDebugText(`pdf+1→${pdi+1}, ndi→${ndi}`, 7)
 
         /*  handles last word corner case: if we don't find a subsequent
             whitespace (ndi's indexOf returns -1), set our bar to cover up to
@@ -472,7 +472,7 @@ class Passage {
     advance() {
         if (!this.finished())
             this.index += 1
-        else DEBUG_TEXT = `tried to advance but passage was already done`
+        else setDebugText(`tried to advance but passage was already done`, 0)
     }
 
 
