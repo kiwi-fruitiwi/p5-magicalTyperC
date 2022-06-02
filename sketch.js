@@ -180,7 +180,7 @@ function getCardData() {
     let typeText = ''
 
     for (let key of data) {
-        let imgURIs
+        let imgURIs /* this handles double faced cards */
         if (key['image_uris']) {
             imgURIs = key['image_uris']
         } else {
@@ -304,8 +304,11 @@ function updateCard() {
  * @param k
  */
 function processTypedKey(k) {
-    if (passage.finished())
-        noLoop()
+    if (passage.finished()) {
+        currentCardIndex = int(random(0, cards.length))
+        console.log(currentCardIndex)
+        updateCard()
+    }
     else if (passage.getCurrentChar() === k) {
         passage.setCorrect()
         correctSound.play()
