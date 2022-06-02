@@ -3,18 +3,21 @@
  *  @date 2022.04.16
  *
  *  ☒ extract info for one card and put together typing 'level'
- *
+ *  ☐ go to next card when finished typing current one; passage.reload()
+ *  ☐ make ability 'cards' for FFXIV's AST job
+ *      updateCard uses only 'png_uri' and 'typeText'
+ *      typeText is actionName, type, cast, recast, cost, range, radius, effect
  */
 let font
 let instructions
-
-let debugMsgList = ['','','','',''] /* defaults to 5 empty strings */
 
 let passage
 let correctSound /* audio cue for typing one char correctly */
 let incorrectSound /* audio cue for typing one char incorrectly */
 
 let scryfall /* json file from scryfall: set=snc */
+let scryfallData = [] /* the 'data' field of a JSON query from api.scryfall */
+let loadedJSON = false /* flag to indicate if we're done loading all pages */
 let cardImg
 let currentCardIndex
 let cards /* packed up JSON data */
@@ -26,12 +29,16 @@ const FONT_SIZE = 32
 let dc
 let milk /* used for magicCard glow */
 let sleepLeftMilliseconds = 0;
+let lastRequestTime = 0
 const game = cardURIGenerator();
+
+let debugCorner /* output debug text in the bottom left corner of the canvas */
 
 function preload() {
     font = loadFont('data/consola.ttf')
     // font = loadFont('data/lucida-console.ttf')
-    scryfall = loadJSON('json/scryfall-snc.json')
+    let req = 'https://api.scryfall.com/cards/search?q=set:stx'
+    scryfall = loadJSON(req)
 }
 
 
@@ -40,6 +47,7 @@ function setup() {
     cnv.parent('#canvas')
     colorMode(HSB, 360, 100, 100, 100)
 
+    debugCorner = new CanvasDebugCorner(5)
     milk = color(207, 7, 99)
     dc = drawingContext
 
@@ -54,13 +62,37 @@ function setup() {
     correctSound = loadSound('data/correct.wav')
     incorrectSound = loadSound('data/incorrect.wav')
 
-    // passage = new Passage('When Backup Agent enters the battlefield, put a' +
-    //     ' +1/+1 counter on target creature.\n1/1\n')
+    if (scryfall['has_more']) {
+        let pageTwoJSONURL = scryfall['next_page']
+        loadJSON(pageTwoJSONURL, gotData)
+    }
 
-    cards = getCardData()
-    cards.sort(sortCardsByID)
-    currentCardIndex = int(random(0, cards.length))
-    updateCard()
+}
+
+
+function gotData(data) {
+    console.log(`data retrieved! ${data['data'].length}`)
+    console.log(`request time → ${millis() - lastRequestTime}`)
+    lastRequestTime = millis()
+
+    /* add all elements of returned JSON data to our current array */
+    scryfallData = scryfallData.concat(data['data'])
+
+    if (data['has_more']) {
+        loadJSON(data['next_page'], gotData)
+    } else { /* we are done loading! */
+        loadedJSON = true
+
+        console.log(`total request time → ${millis()}`)
+        console.log(`total data length: ${scryfallData.length}`)
+
+        cards = getCardData()
+        cards.sort(sortCardsByID)
+        console.log(`cards loaded! → ${cards.length}`)
+
+        currentCardIndex = int(random(0, cards.length))
+        updateCard()
+    }
 }
 
 
@@ -73,15 +105,9 @@ function resetDcShadow() {
 
 function draw() {
     background(passage.cBackground)
-    textFont(font, FONT_SIZE)
-
-    setDebugText(`frameCount: ${frameCount}`, 4)
-    setDebugText(`set id: ${currentCardIndex}`, 3)
 
     passage.render()
     // passage.displayRowMarkers(5)
-
-    displayDebugCorner()
     // invokeCardGenerator()
 
     const IMG_WIDTH = 340
@@ -98,6 +124,11 @@ function draw() {
     /* 626x457 */
     image(cardImg, width-IMG_WIDTH-hPadding+jitter, vPadding/2 + 20)
     resetDcShadow()
+
+    /* debugCorner needs to be last so its z-index is highest */
+    debugCorner.setText(`frameCount: ${frameCount}`, 4)
+    debugCorner.setText(`set id: ${currentCardIndex}`, 3)
+    debugCorner.show()
 }
 
 
@@ -143,7 +174,7 @@ function getCardData() {
 
     /* regex for detecting creatures and common/uncommon rarity */
     const creature = new RegExp('[Cc]reature|Vehicle')
-    const rarity = new RegExp('(common|uncommon)')
+    const rarity = new RegExp('(common|uncommon|rare|mythic)')
     // const rarity = new RegExp('(rare|mythic)')
     let count = 0
     let typeText = ''
@@ -191,31 +222,6 @@ function getCardData() {
 
      // let unused = `${key['image_uris']['art_crop']}`
     return results
-}
-
-
-function setDebugText(text, index) {
-    if (index >= 5) {
-        debugMsgList[0] = `${index} ← debug index > 4 not supported`
-    } else debugMsgList[index] = text
-}
-
-
-/** 🧹 shows debugging info using text() 🧹 */
-function displayDebugCorner() {
-    textFont(font, 14)
-
-    const LEFT_MARGIN = 10
-    const DEBUG_Y_OFFSET = height - 10 /* floor of debug corner */
-    const LINE_SPACING = 2
-    const LINE_HEIGHT = textAscent() + textDescent() + LINE_SPACING
-    fill(0, 0, 100, 100) /* white */
-    strokeWeight(0)
-
-    for (let index in debugMsgList) {
-        const msg = debugMsgList[index]
-        text(msg, LEFT_MARGIN, DEBUG_Y_OFFSET - LINE_HEIGHT * index)
-    }
 }
 
 
@@ -299,6 +305,40 @@ function processTypedKey(k) {
     } else {
         passage.setIncorrect()
         incorrectSound.play()
+    }
+}
+
+
+/** 🧹 shows debugging info using text() 🧹 */
+class CanvasDebugCorner {
+    constructor(lines) {
+        this.size = lines
+        this.debugMsgList = [] /* initialize all elements to empty string */
+        for (let i in lines)
+            this.debugMsgList[i] = ''
+    }
+
+    setText(text, index) {
+        if (index >= this.size) {
+            this.debugMsgList[0] = `${index} ← index>${this.size} not supported`
+        } else this.debugMsgList[index] = text
+    }
+
+    show() {
+        textFont(font, 14)
+        strokeWeight(1)
+
+        const LEFT_MARGIN = 10
+        const DEBUG_Y_OFFSET = height - 10 /* floor of debug corner */
+        const LINE_SPACING = 2
+        const LINE_HEIGHT = textAscent() + textDescent() + LINE_SPACING
+        fill(0, 0, 100, 100) /* white */
+        strokeWeight(0)
+
+        for (let index in this.debugMsgList) {
+            const msg = this.debugMsgList[index]
+            text(msg, LEFT_MARGIN, DEBUG_Y_OFFSET - LINE_HEIGHT * index)
+        }
     }
 }
 

@@ -24,8 +24,8 @@ class Passage {
         this.RIGHT_MARGIN = 440
         this.HIGHLIGHT_PADDING = 5
         this.LINE_SPACING = 8 /* spacing between lines */
-        this.lastLineVPadding = 5 /* extra vertical padding on final line */
         this.HIGHLIGHT_BOX_HEIGHT = 0 /* to be set dynamically later */
+        this.lastLineVPadding = 5 /* extra vertical padding on final line */
 
         /* this is the horizontal coordinate where we must text wrap */
         this.LINE_WRAP_X_POS = width - this.RIGHT_MARGIN
@@ -54,6 +54,8 @@ class Passage {
 
     /** renders this passage using vectors instead of constant offsets */
     render() {
+        textFont(font, FONT_SIZE)
+
         noStroke()
         this.lines = 0 /* count lines per render */
         this.lineWrapIndices = [] /* per render, record where we wrap lines */
@@ -382,7 +384,7 @@ class Passage {
         /* 'next delimiter index', 'previous delimiter index' */
         const ndi = min(indexOfNextSpace, indexOfNextNewline)
         const pdi = max(indexOfLastSpace, indexOfLastNewline)
-        setDebugText(`pdf+1→${pdi+1}, ndi→${ndi}`, 7)
+        // debugCorner.setText(`pdf+1→${pdi+1}, ndi→${ndi}`, 2)
 
         /*  handles last word corner case: if we don't find a subsequent
             whitespace (ndi's indexOf returns -1), set our bar to cover up to
@@ -472,7 +474,8 @@ class Passage {
     advance() {
         if (!this.finished())
             this.index += 1
-        else setDebugText(`tried to advance but passage was already done`, 0)
+        else debugCorner.setText(
+            `tried to advance but passage was already done`, 0)
     }
 
 
