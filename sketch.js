@@ -15,9 +15,8 @@ let passage
 let correctSound /* audio cue for typing one char correctly */
 let incorrectSound /* audio cue for typing one char incorrectly */
 
-let scryfall /* json file from scryfall: set=snc */
-let scryfallData = [] /* the 'data' field of a JSON query from api.scryfall */
-let loadedJSON = false /* flag to indicate if we're done loading all pages */
+let initialScryfallQueryJSON /* json file from scryfall: set=snc */
+let scryfallData /* the 'data' field of a JSON query from api.scryfall */
 let cardImg
 let currentCardIndex
 let cards /* packed up JSON data */
@@ -37,8 +36,8 @@ let debugCorner /* output debug text in the bottom left corner of the canvas */
 function preload() {
     font = loadFont('data/consola.ttf')
     // font = loadFont('data/lucida-console.ttf')
-    let req = 'https://api.scryfall.com/cards/search?q=set:stx'
-    scryfall = loadJSON(req)
+    let req = 'https://api.scryfall.com/cards/search?q=set:2ed'
+    initialScryfallQueryJSON = loadJSON(req)
 }
 
 
@@ -62,8 +61,10 @@ function setup() {
     correctSound = loadSound('data/correct.wav')
     incorrectSound = loadSound('data/incorrect.wav')
 
-    if (scryfall['has_more']) {
-        let pageTwoJSONURL = scryfall['next_page']
+    scryfallData = []
+    scryfallData = scryfallData.concat(initialScryfallQueryJSON['data'])
+    if (initialScryfallQueryJSON['has_more']) {
+        let pageTwoJSONURL = initialScryfallQueryJSON['next_page']
         loadJSON(pageTwoJSONURL, gotData)
     }
 
@@ -81,8 +82,6 @@ function gotData(data) {
     if (data['has_more']) {
         loadJSON(data['next_page'], gotData)
     } else { /* we are done loading! */
-        loadedJSON = true
-
         console.log(`total request time → ${millis()}`)
         console.log(`total data length: ${scryfallData.length}`)
 
@@ -127,7 +126,7 @@ function draw() {
 
     /* debugCorner needs to be last so its z-index is highest */
     debugCorner.setText(`frameCount: ${frameCount}`, 4)
-    debugCorner.setText(`set id: ${currentCardIndex}`, 3)
+    debugCorner.setText(`set id: ${currentCardIndex} of ${cards.length}`, 3)
     debugCorner.show()
 }
 
@@ -170,7 +169,6 @@ function sortCardsByID(a, b) {
  */
 function getCardData() {
     let results = []
-    let data = scryfall['data']
 
     /* regex for detecting creatures and common/uncommon rarity */
     const creature = new RegExp('[Cc]reature|Vehicle')
@@ -179,7 +177,7 @@ function getCardData() {
     let count = 0
     let typeText = ''
 
-    for (let key of data) {
+    for (let key of scryfallData) {
         let imgURIs /* this handles double faced cards */
         if (key['image_uris']) {
             imgURIs = key['image_uris']
