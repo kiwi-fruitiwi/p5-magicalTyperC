@@ -36,7 +36,7 @@ let debugCorner /* output debug text in the bottom left corner of the canvas */
 function preload() {
     font = loadFont('data/consola.ttf')
     // font = loadFont('data/lucida-console.ttf')
-    let req = 'https://api.scryfall.com/cards/search?q=set:2ed'
+    let req = 'https://api.scryfall.com/cards/search?q=set:dmu'
     initialScryfallQueryJSON = loadJSON(req)
 }
 
@@ -67,7 +67,6 @@ function setup() {
         let pageTwoJSONURL = initialScryfallQueryJSON['next_page']
         loadJSON(pageTwoJSONURL, gotData)
     }
-
 }
 
 
@@ -90,6 +89,7 @@ function gotData(data) {
         console.log(`cards loaded! → ${cards.length}`)
 
         currentCardIndex = int(random(0, cards.length))
+        // currentCardIndex = 0
         updateCard()
     }
 }
@@ -126,7 +126,7 @@ function draw() {
 
     /* debugCorner needs to be last so its z-index is highest */
     debugCorner.setText(`frameCount: ${frameCount}`, 4)
-    debugCorner.setText(`set id: ${currentCardIndex} of ${cards.length}`, 3)
+    debugCorner.setText(`set id: ${currentCardIndex} of ${cards.length-1}`, 3)
     debugCorner.show()
 }
 
@@ -172,7 +172,8 @@ function getCardData() {
 
     /* regex for detecting creatures and common/uncommon rarity */
     const creature = new RegExp('[Cc]reature|Vehicle')
-    const rarity = new RegExp('(common|uncommon|rare|mythic)')
+    // const rarity = new RegExp('(common|uncommon|rare|mythic)')
+    const rarity = new RegExp('(common|uncommon)')
     // const rarity = new RegExp('(rare|mythic)')
     let count = 0
     let typeText = ''
@@ -303,7 +304,14 @@ function updateCard() {
  */
 function processTypedKey(k) {
     if (passage.finished()) {
-        currentCardIndex = int(random(0, cards.length))
+        // currentCardIndex = int(random(0, cards.length))
+
+        /* go to the next card unless we're at the end of the list */
+        if (currentCardIndex !== cards.length-1) {
+            currentCardIndex += 1
+        } else { /* wrap */
+            currentCardIndex = 0
+        }
         console.log(currentCardIndex)
         updateCard()
     }
