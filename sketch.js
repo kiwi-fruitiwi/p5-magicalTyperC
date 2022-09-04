@@ -89,7 +89,7 @@ function gotData(data) {
         console.log(`cards loaded! → ${cards.length}`)
 
         currentCardIndex = int(random(0, cards.length))
-        // currentCardIndex = 0
+        currentCardIndex = 1
         updateCard()
     }
 }
@@ -265,6 +265,11 @@ function keyPressed() {
         /* temporary hack for handling enter key */
         if (keyCode === ENTER) {
             processTypedKey('\n')
+            return
+        }
+
+        if (keyCode === UP_ARROW) {
+            processTypedKey('/')
             return
         }
 
