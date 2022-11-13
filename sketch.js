@@ -36,7 +36,7 @@ let debugCorner /* output debug text in the bottom left corner of the canvas */
 function preload() {
     font = loadFont('data/consola.ttf')
     // font = loadFont('data/lucida-console.ttf')
-    let req = 'https://api.scryfall.com/cards/search?q=set:dmu'
+    let req = 'https://api.scryfall.com/cards/search?q=set:bro'
     initialScryfallQueryJSON = loadJSON(req)
 }
 
@@ -273,7 +273,7 @@ function keyPressed() {
             return
         }
 
-        /* handle emdash by allowing dash to replace it */
+        /* handle em-dash by allowing dash to replace it */
         if (key === '-') {
             processTypedKey('—')
             return
