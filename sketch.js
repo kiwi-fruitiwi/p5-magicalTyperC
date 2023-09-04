@@ -1,12 +1,19 @@
 /**
- *  @author kiwi
- *  @date 2022.04.16
+ * @author kiwi
+ * @date 2022.04.16
  *
- *  ☒ extract info for one card and put together typing 'level'
- *  ☐ go to next card when finished typing current one; passage.reload()
- *  ☐ make ability 'cards' for FFXIV's AST job
- *      updateCard uses only 'png_uri' and 'typeText'
- *      typeText is actionName, type, cast, recast, cost, range, radius, effect
+ * 2023.09.04
+ * 🏭 make a toggle to cache the Scryfall request. just add 🍁WOE and 💍LTR
+ * 🏭 separate Adventures into two faces.
+ *      see combatTricks for how to separate, combine
+ * 🏭 add words per minute - wpm
+ * 🏭 keep local storage of words per minute
+ *      ls → stats for most missed characters
+ *
+ * ⚙️ future features ⚙️
+ * make ability 'cards' for FFXIV's AST job
+ * updateCard uses only 'png_uri' and 'typeText'
+ * typeText:actionName, type, cast, recast, cost, range, radius, effect
  */
 let font
 let instructions
@@ -36,7 +43,7 @@ let debugCorner /* output debug text in the bottom left corner of the canvas */
 function preload() {
     font = loadFont('data/consola.ttf')
     // font = loadFont('data/lucida-console.ttf')
-    let req = 'https://api.scryfall.com/cards/search?q=set:bro'
+    let req = 'https://api.scryfall.com/cards/search?q=set:woe'
     initialScryfallQueryJSON = loadJSON(req)
 }
 
@@ -362,41 +369,3 @@ class CanvasDebugCorner {
         }
     }
 }
-
-
-/*
-@author Kiwi
-@date 2021-11-06
-
-This will be a typingclub clone made in the spirit of our 15.301 project
- from 2004.
-
-
-planning
-    create passage class
-    add sound: correct and incorrect.wav via p5.sound play()
-
-
-commit schedule
-    console typing with truncated passage
-    don't clobber passage
-    display passage with text()
-    passage object ➜ highlights for correct vs incorrect
-    index underscore in blue
-    current gray horizontal marker
-    don't take modifier keys as input; allow capital letters
-
-planned features
-    multiline passage. wrap: find next word and test its width
-    reset button
-    bottom line indicating total progress. 100% on right
-    start typing animation: rectangle + bounce
-    tracking wpm
-    last word wpm
-    wpm and accuracy counter on bottom
-    scrolling text passage? before that we limit to screen size
-    scoring animation, maybe with camera. viewport
-        viewport https://forum.processing.org/two/discussion/14992/how-to-move-the-view-without-camera
-        cameras https://behreajj.medium.com/cameras-in-processing-2d-and-3d-dc45fd03662c
-
- */
