@@ -17,6 +17,7 @@
  */
 let font
 let instructions
+let loaded  /* set to true when we finish loading json and passage */
 
 let passage
 let correctSound /* audio cue for typing one char correctly */
@@ -36,14 +37,13 @@ let dc
 let milk /* used for magicCard glow */
 let sleepLeftMilliseconds = 0;
 let lastRequestTime = 0
-const game = cardURIGenerator();
 
 let debugCorner /* output debug text in the bottom left corner of the canvas */
 
 function preload() {
     font = loadFont('data/consola.ttf')
-    // font = loadFont('data/lucida-console.ttf')
-    let req = 'https://api.scryfall.com/cards/search?q=set:woe'
+
+    const req = 'https://api.scryfall.com/cards/search?q=set:woe'
     initialScryfallQueryJSON = loadJSON(req)
 }
 
@@ -63,7 +63,7 @@ function setup() {
         numpad 1 → freeze sketch</pre>`)
 
     /* change collector's number with numpad keys! */
-    /* 🥝 [4:-1, 6:+1, 8:+10, 2:-10] 🌊 */
+    /* 🥝 [4:-1, 6:+1, 5: random, 8:+10, 2:-10] 🌊 */
 
     correctSound = loadSound('data/correct.wav')
     incorrectSound = loadSound('data/incorrect.wav')
@@ -96,7 +96,6 @@ function gotData(data) {
         console.log(`cards loaded! → ${cards.length}`)
 
         currentCardIndex = int(random(0, cards.length))
-        currentCardIndex = 1
         updateCard()
     }
 }
@@ -110,57 +109,31 @@ function resetDcShadow() {
 
 
 function draw() {
-    background(passage.cBackground)
+    if (loaded) {
+        background(passage.cBackground)
+        passage.render()
 
-    passage.render()
-    // passage.displayRowMarkers(5)
-    // invokeCardGenerator()
+        const IMG_WIDTH = 340
+        cardImg.resize(IMG_WIDTH, 0)
+        tint(0, 0, 100)
 
-    const IMG_WIDTH = 340
-    cardImg.resize(IMG_WIDTH, 0)
-    tint(0, 0, 100)
+        dc.shadowBlur = 24
+        dc.shadowColor = milk
 
-    dc.shadowBlur = 24
-    dc.shadowColor = milk
+        const hPadding = passage.LEFT_MARGIN / 2
+        const vPadding = passage.TOP_MARGIN
+        let jitter = 0 /*sin(frameCount / 30) * 15*/
 
-    const hPadding = passage.LEFT_MARGIN/2
-    const vPadding = passage.TOP_MARGIN
-    let jitter = 0 /*sin(frameCount / 30) * 15*/
+        /* 626x457 */
+        image(cardImg, width - IMG_WIDTH - hPadding + jitter, vPadding / 2 + 20)
+        resetDcShadow()
 
-    /* 626x457 */
-    image(cardImg, width-IMG_WIDTH-hPadding+jitter, vPadding/2 + 20)
-    resetDcShadow()
-
-    /* debugCorner needs to be last so its z-index is highest */
-    debugCorner.setText(`frameCount: ${frameCount}`, 4)
-    debugCorner.setText(`set id: ${currentCardIndex} of ${cards.length-1}`, 3)
-    debugCorner.show()
-}
-
-
-/** call this in the draw loop to invoke cardURIGenerator to save cards */
-function invokeCardGenerator() {
-    sleepLeftMilliseconds -= deltaTime;
-    if (sleepLeftMilliseconds <= 0) {
-        sleepLeftMilliseconds = game.next().value;
+        /* debugCorner needs to be last so its z-index is highest */
+        debugCorner.setText(`frameCount: ${frameCount}`, 4)
+        debugCorner.setText(`set id: ${currentCardIndex} of ${cards.length - 1}`, 3)
+        debugCorner.show()
     }
 }
-
-
-/** saves scryfall magic card images to the browser default download location */
-function* cardURIGenerator() {
-    console.log('[ INFO ] starting generator!');
-    let cardPngImg
-
-    for (let i=0; i<cards.length; i++) {
-        cardPngImg = loadImage(cards[i].normal_uri)
-        yield 1500;
-        // image(cardPngImg, width/2, height/2)
-        cardPngImg.save(`${cards[i].collector_number} ${cards[i].name}.jpg`)
-        console.log(cards[i].name)
-    }
-}
-
 
 function sortCardsByID(a, b) {
     if (a.collector_number === b.collector_number) {
@@ -303,6 +276,8 @@ function updateCard() {
     passage = new Passage(cards[currentCardIndex].typeText)
     cardImg = loadImage(cards[currentCardIndex].png_uri)
     console.log(cards[currentCardIndex].typeText)
+
+    loaded = true
 }
 
 
