@@ -23,7 +23,7 @@ class Passage {
         this.LEFT_MARGIN = 64
         this.RIGHT_MARGIN = 440
         this.HIGHLIGHT_PADDING = 5
-        this.LINE_SPACING = 8 /* spacing between lines */
+        this.LINE_SPACING = FONT_SIZE / 4 /* spacing between lines. 8 orig */
         this.HIGHLIGHT_BOX_HEIGHT = 0 /* to be set dynamically later */
         this.lastLineVPadding = 5 /* extra vertical padding on final line */
 

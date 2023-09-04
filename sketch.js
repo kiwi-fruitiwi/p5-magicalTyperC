@@ -35,7 +35,6 @@ const FONT_SIZE = 32
 
 let dc
 let milk /* used for magicCard glow */
-let sleepLeftMilliseconds = 0;
 let lastRequestTime = 0
 
 let debugCorner /* output debug text in the bottom left corner of the canvas */
@@ -259,14 +258,19 @@ function getCardData(data) {
                 doubleFaceCard = true
             }
 
+            /* create reverse copy of element['card_faces'] to iterate
+             *  this just does adventure before the backside in WOE
+             */
+            const cardFacesCopy = element['card_faces'].reverse()
+
             /** iterate through multiple faces and process */
-            for (let i in element['card_faces']) {
-                let face = element['card_faces'][i]
+            for (let i in cardFacesCopy) {
+                let face = cardFacesCopy[i]
 
                 if (facesShareArt)
                     imgURIs = element['image_uris']
                 else
-                    imgURIs = element['card_faces'][i]['image_uris']
+                    imgURIs = cardFacesCopy[i]['image_uris']
 
                 /* amend face with needed information from main card */
                 face['collector_number'] = element['collector_number']
