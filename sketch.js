@@ -91,7 +91,7 @@ function gotData(data) {
         console.log(`total request time → ${millis()}`)
         console.log(`total data length: ${scryfallData.length}`)
 
-        cards = getCardData()
+        cards = getCardData(scryfallData)
         cards.sort(sortCardsByID)
         console.log(`cards loaded! → ${cards.length}`)
 
@@ -145,68 +145,147 @@ function sortCardsByID(a, b) {
 
 
 /**
- *  (name, id, art_crop uri, png uri, typeText with \n)
+ * takes card data: an element from the scryfall json, and returns relevant
+ * fields for combatTricks
+ * @param element either the entire card from scryfall json, or one face
+ * from 🔑card_faces
+ * @param imgURIs for Adventures, the image is part of the json card object
+ * rather than the child card_face object because the art is shared! for MDFCs,
+ * battles, werewolves, etc., each card_face has its own art because it's
+ * the back of the card
+ * @return object json containing all necessary information about a card face
  */
-function getCardData() {
-    let results = []
-
-    /* regex for detecting creatures and common/uncommon rarity */
-    const creature = new RegExp('[Cc]reature|Vehicle')
-    // const rarity = new RegExp('(common|uncommon|rare|mythic)')
-    const rarity = new RegExp('(common|uncommon)')
-    // const rarity = new RegExp('(rare|mythic)')
-    let count = 0
+function processCardFace(element, imgURIs) {
+    /** formatted text for magicalTyperC */
     let typeText = ''
 
-    for (let key of scryfallData) {
-        let imgURIs /* this handles double faced cards */
-        if (key['image_uris']) {
-            imgURIs = key['image_uris']
+    /** regex for testing if a card is a creature, i.e. has power, toughness */
+    const creature = new RegExp('[Cc]reature|Vehicle')
+
+    /* if mana value is 0, skip displaying the space for our typerC text */
+    let manaCost = element['mana_cost']
+    if (manaCost !== '')
+        manaCost = ' ' + manaCost
+
+    typeText = `${element.name}${manaCost}\n${element['type_line']}\n${element['oracle_text']}\n`
+    /* sometimes p/t don't exist. check type */
+    if (creature.test(element['type_line']))
+        typeText += `${element['power']}/${element['toughness']}\n`
+    /* we need whitespace at end for passage end detection to work */
+
+    if (element['flavor_text'])
+        typeText += `\n${element['flavor_text']}\n`
+    else typeText += '\n'
+
+    /* extra space makes user able to hit 'enter' at end */
+    typeText += ' '
+
+    /* remove all reminder text, e.g. (If you control another Role on it,
+        put that one into the graveyard. Enchanted creature gets +1/+1 and
+        has trample.)
+
+        \(      → matches the opening paren
+        ([^)]*  → matches non-close-paren characters zero or more times
+                    note we can enclose this in parens to see what we replaced
+        \)      → matches closing paren
+
+        The g flag at the end of the regex pattern ensures that the replacement
+        occurs globally throughout the string? according to GPT4
+     */
+    typeText = typeText.replace(/\([^)]*\)/g, '')
+
+    return {
+        'name': element['name'],
+        'colors': element['colors'],
+
+        /* keywords apply to both faces? see harried artisan */
+        'keywords': element['keywords'],
+        'rarity': element['rarity'],
+        'type_line': element['type_line'],
+        'oracle_text': element['oracle_text'],
+        'collector_number': int(element['collector_number']),
+        'typeText': typeText,
+        'art_crop_uri': imgURIs['art_crop'], /* 626x457 ½ MB*/
+        'small_uri': imgURIs['small'], /* 146x204 */
+        'normal_uri': imgURIs['normal'], /* normal 488x680 64KB */
+        'large_uri': imgURIs['large'], /* large 672x936 100KB */
+        'border_crop_uri': imgURIs['border_crop'], /* 480x680 104KB */
+        'png_uri': imgURIs['png'] /* png 745x1040 1MB */
+    }
+}
+
+
+/**
+ * replacement for getCardData
+ * @param data scryfall JSON data object
+ */
+function getCardData(data) {
+    console.log(`💦 [${data[0]['set_name']}] ${data.length}`)
+
+    /** a list of cardData objects containing img and typeText info */
+    let results = []
+
+    /** counts cards that pass the filters, like rarity */
+    let cardCount = 0
+
+    /** counts adventures twice */
+    let cardFaceCount = 0
+
+    for (let element of data) {
+        /** object containing URLs for various image sizes and styles */
+        let imgURIs
+
+        /** double-sided cards like lessons, vampires, MDFCs have card image
+         data inside an array within card_faces. card_faces[0] always gives
+         the front card. e.g. Kazandu Mammoth from ZNR
+         also applies to: battles
+         */
+        let doubleFaceCard = false
+
+        /** adventures use 🔑card_faces, but both 'faces' share the same art */
+        let facesShareArt = false
+
+        /* iterate through card faces if they exist */
+        if (element['card_faces']) {
+            /** cards either share one image across all faces (adventures) or
+             have a unique image per face. find out which and flag.
+             note if element['image_uris'] exists here after the preceding
+             🔑card_faces check, then that image is shared across all
+             card faces: it must be an adventure! */
+            if (element['image_uris']) {
+                facesShareArt = true
+            } else {
+                /* card faces have unique images: battles, MDFCs, day / night */
+                doubleFaceCard = true
+            }
+
+            /** iterate through multiple faces and process */
+            for (let i in element['card_faces']) {
+                let face = element['card_faces'][i]
+
+                if (facesShareArt)
+                    imgURIs = element['image_uris']
+                else
+                    imgURIs = element['card_faces'][i]['image_uris']
+
+                /* amend face with needed information from main card */
+                face['collector_number'] = element['collector_number']
+                face['keywords'] = element['keywords']
+                face['rarity'] = element['rarity']
+
+                results.push(processCardFace(face, imgURIs))
+                cardFaceCount += 1
+            }
         } else {
-            imgURIs = key['card_faces'][0]
-        }
-
-        /* if mana value is 0, skip displaying the space */
-        let manaCost = key['mana_cost']
-        if (manaCost !== '')
-            manaCost = ' ' + manaCost
-
-        typeText = `${key.name}${manaCost}\n${key['type_line']}\n${key['oracle_text']}\n`
-
-        /* sometimes p/t don't exist. check type */
-        if (creature.test(key['type_line']))
-            typeText += `${key['power']}/${key['toughness']}\n`
-            /* we need whitespace at end for passage end detection to work */
-
-        if (key['flavor_text'])
-            typeText += `\n${key['flavor_text']}\n`
-        else typeText += '\n'
-
-        typeText += ' ' /* extra space makes user able to hit 'enter' at end*/
-
-        /* only display commons and uncommons in our color filter */
-        if (rarity.test(key['rarity'])) {
-            results.push({
-                'typeText': typeText,
-                'name': key.name,
-                'collector_number': int(key['collector_number']),
-                'art_crop_uri': imgURIs['art_crop'], /*626x457 ½ MB*/
-                'normal_uri': imgURIs['normal'],
-                'large_uri': imgURIs['large'],
-                'png_uri': imgURIs['png'] /* 745x1040 */
-
-                /* normal 488x680 64KB, large 672x936 100KB png 745x1040 1MB*/
-            })
-            count++
-
-            // if (key.colors.some(e => e === 'W')) {
-            //     results.push(typeText)
-            //     count++
-            // }
+            /* process single face */
+            imgURIs = element['image_uris']
+            results.push(processCardFace(element, imgURIs))
+            cardCount += 1
         }
     }
 
-     // let unused = `${key['image_uris']['art_crop']}`
+    console.log(`🍆 [+single cards] ${cardCount}`)
+    console.log(`🍆 [+card faces] ${cardFaceCount}`)
     return results
 }
 
