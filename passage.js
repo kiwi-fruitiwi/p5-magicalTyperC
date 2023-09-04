@@ -19,9 +19,27 @@ class Passage {
 
         this.TEXT_ALPHA = 100
 
-        this.TOP_MARGIN = 100
-        this.LEFT_MARGIN = 64
-        this.RIGHT_MARGIN = 440
+        /** this is the starting cursor's y position, so it's not technically a
+             margin */
+        this.TOP_MARGIN = 135
+
+        /** left and right passage text padding; overflows passage dimensions */
+        this.HORIZONTAL_PADDING = 7
+
+        /** top and bottom passage text padding; overflows passage dimensions */
+        this.VERTICAL_PADDING = 7
+
+        /**  */
+
+        /* CARD_WIDTH and CARD_LEFT_MARGIN are defined in sketch.js; match
+            passage margin with card left margin for symmetry
+            TODO: we should get CARD_XPOS instead
+         */
+        this.LEFT_MARGIN = CARD_LEFT_MARGIN
+        this.X_START = CARD_WIDTH + CARD_LEFT_MARGIN + this.LEFT_MARGIN
+
+        /* TODO redo this math to be passage width */
+        this.RIGHT_MARGIN = CARD_LEFT_MARGIN /* left passage original: 440 */
         this.HIGHLIGHT_PADDING = 5
         this.LINE_SPACING = FONT_SIZE / 4 /* spacing between lines. 8 orig */
         this.HIGHLIGHT_BOX_HEIGHT = 0 /* to be set dynamically later */
@@ -31,7 +49,7 @@ class Passage {
         this.LINE_WRAP_X_POS = width - this.RIGHT_MARGIN
 
         /* save original x,y position of cursor */
-        this.originalCursorPos = new p5.Vector(this.LEFT_MARGIN,this.TOP_MARGIN)
+        this.originalCursorPos = new p5.Vector(this.X_START,this.TOP_MARGIN)
 
         /* colors */
         this.cBackground = color(234, 34, 24)
@@ -48,7 +66,7 @@ class Passage {
         const lineHeight = this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
 
         for (let i=0; i<n; i++)
-            point(this.LEFT_MARGIN, yStart + lineHeight*i)
+            point(this.X_START, yStart + lineHeight*i)
     }
 
 
@@ -71,7 +89,7 @@ class Passage {
         /* bottom left corner of the current letter we are about to type */
         /* this is the 'current character position' when iterating through
          chars in passage.text */
-        let ccp = new p5.Vector(this.LEFT_MARGIN,
+        let ccp = new p5.Vector(this.X_START,
             this.TOP_MARGIN + this.yScroll.pos.y)
 
         /* iterate through every char in this passage and display it */
@@ -102,7 +120,7 @@ class Passage {
 
         this.#showCurrentWordBar(charPositions)
         this.#showTextCursor(charPositions)
-        // this.#showBoundingBox(CHAR_POS)
+        // this.#showBoundingBox(charPositions)
         this.#drawViewPort()
         this.#showProgressBar(charPositions)
         this.#scrollDown(charPositions, this.linesToShow)
@@ -167,13 +185,13 @@ class Passage {
 
         const barHeight = 4
         strokeWeight(barHeight-2) /* height of support line */
-        const vPadding = 15
+        const vPadding = 20
         const lowestBoxPoint = this.#getLowestBoxPoint(positions) + vPadding
         const pbSupport = lowestBoxPoint - 5 /* progress bar sits on top of me*/
 
         /* bottom boundary of typing area */
         const rightBoundary = width - this.RIGHT_MARGIN
-        line(this.LEFT_MARGIN, pbSupport, rightBoundary, pbSupport)
+        line(this.X_START, pbSupport, rightBoundary, pbSupport)
 
         /* actual progress bar's main transparent line */
         strokeWeight(barHeight) /* height of support line */
@@ -182,9 +200,9 @@ class Passage {
         const endWidth = 5 /* leading opaque rectangle's width in progressBar */
         const progress = map(
             this.index, 0, this.text.length-1,
-            this.LEFT_MARGIN, rightBoundary)
+            this.X_START, rightBoundary)
 
-        line(this.LEFT_MARGIN, pbSupport-barHeight,
+        line(this.X_START, pbSupport-barHeight,
             progress, pbSupport-barHeight)
 
         /* progress bar's opaque end */
@@ -193,7 +211,7 @@ class Passage {
 
         let progressHeaderStartX = progress - 5
         progressHeaderStartX = constrain(progressHeaderStartX,
-            this.LEFT_MARGIN, rightBoundary)
+            this.X_START, rightBoundary)
         line(progressHeaderStartX, pbSupport-barHeight,
             progress, pbSupport-barHeight)
     }
@@ -243,7 +261,7 @@ class Passage {
     #drawViewPort() {
         this.#showViewPortBackgroundColor()
 
-        const hPadding = this.LEFT_MARGIN / 4
+        const hPadding = this.HORIZONTAL_PADDING
         const vPadding = this.HIGHLIGHT_PADDING + this.LINE_SPACING
         const lowestBoxPoint = this.#getLowestBoxPoint()
         const highestBoxPoint = this.TOP_MARGIN - textAscent() - vPadding
@@ -263,12 +281,15 @@ class Passage {
         vertex(width, height) /* bottom right */
         vertex(0, height) /* bottom left */
 
+        const P = this.VERTICAL_PADDING
+
         /* interior part of shape, counter-clockwise winding */
         beginContour()
-        vertex(width-this.RIGHT_MARGIN+hPadding, highestBoxPoint) /* top right */
-        vertex(this.LEFT_MARGIN-hPadding, highestBoxPoint) /* top left */
-        vertex(this.LEFT_MARGIN-hPadding, lowestBoxPoint) /* bottom left */
-        vertex(width-this.RIGHT_MARGIN+hPadding, lowestBoxPoint) /* bottom
+        vertex(width-this.RIGHT_MARGIN+hPadding, highestBoxPoint-P) /* top
+         right */
+        vertex(this.X_START-hPadding, highestBoxPoint-P) /* top left */
+        vertex(this.X_START-hPadding, lowestBoxPoint+P) /* bottom left */
+        vertex(width-this.RIGHT_MARGIN+hPadding, lowestBoxPoint+P) /* bottom
          right */
         endContour()
         endShape(CLOSE)
@@ -280,7 +301,7 @@ class Passage {
      */
     #showBoundingBox(positions) {
         fill(this.cBoundingBox)
-        const padding = this.LEFT_MARGIN / 2
+        const padding = this.X_START / 2
 
         /* 'box' refers to the bounding box we want to draw */
         const lowestBoxPoint = this.#getLowestBoxPoint(positions)
@@ -294,9 +315,9 @@ class Passage {
 
         rect( /* transparent UI element our passage sits on */
             /* extend rectangle around our boundaries */
-            this.LEFT_MARGIN - padding,
+            this.X_START - padding,
             highestBoxPoint,
-            width - this.LEFT_MARGIN - this.RIGHT_MARGIN + 2 * padding,
+            width - this.X_START - this.RIGHT_MARGIN + 2 * padding,
             lowestBoxPoint - highestBoxPoint, /* just extend through the bottom */
             10)
     }
@@ -440,7 +461,7 @@ class Passage {
 
     #wrapCursor(cursor, index) { /* mutate cursor coordinates to wrap */
         cursor.y += this.HIGHLIGHT_BOX_HEIGHT + this.LINE_SPACING
-        cursor.x = this.LEFT_MARGIN /* don't forget to wrap the x ᴖᴥᴖ */
+        cursor.x = this.X_START /* don't forget to wrap the x ᴖᴥᴖ */
         this.lineWrapIndices.push(index)
     }
 

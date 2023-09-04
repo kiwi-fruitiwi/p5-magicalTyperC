@@ -34,6 +34,9 @@ let cardFaces /* packed up JSON data. some cards have multiple faces */
 
 const ART_CROP_WIDTH = 626
 const ART_CROP_HEIGHT = 457
+
+const CARD_WIDTH = 380
+const CARD_LEFT_MARGIN = 32
 const FONT_SIZE = 32
 
 let dc
@@ -65,15 +68,9 @@ function setup() {
     instructions = select('#ins')
     instructions.html(`<pre>
         🍁ᵂᴼᴱ: Wilds of Eldraine
-        numpad 1 → freeze sketch
         
-        numpad 4 → previous card
-        numpad 6 → next card
-        numpad 2 → jump forward 10 cards
-        numpad 8 → jump backward 10 cards
-        
-        numpad 5 → random card
-        numpad 7 → toggle flavor text
+        numpad [ 1 → freeze, 5 → random, 7 → flavorTextToggle ]
+        numpad [ 6 → next, 4 → previous, 2 → jump10-, 8 → jump10+ ]
         </pre>`)
 
     /* change collector's number with numpad keys! */
@@ -127,19 +124,16 @@ function draw() {
         background(passage.cBackground)
         passage.render()
 
-        const IMG_WIDTH = 340
-        cardImg.resize(IMG_WIDTH, 0)
+        cardImg.resize(CARD_WIDTH, 0)
         tint(0, 0, 100)
 
         dc.shadowBlur = 24
         dc.shadowColor = milk
 
-        const hPadding = passage.LEFT_MARGIN / 2
-        const vPadding = passage.TOP_MARGIN
-        let jitter = 0 /*sin(frameCount / 30) * 15*/
+        let jitter = 0 /* sin(frameCount / 30) * 15 */
 
         /* 626x457 */
-        image(cardImg, width - IMG_WIDTH - hPadding + jitter, vPadding / 2 + 20)
+        image(cardImg, CARD_LEFT_MARGIN, 35)
         resetDcShadow()
 
         /* debugCorner needs to be last so its z-index is highest */
