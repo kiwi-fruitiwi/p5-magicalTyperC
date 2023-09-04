@@ -5,8 +5,14 @@ html, body {
 
 body {
     display: flex;
-    align-items: center;
+    align-items: start;
     justify-content: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    background-size: cover;
+
+    overflow-y: scroll;
 }
 
 #ins {

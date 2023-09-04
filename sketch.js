@@ -44,13 +44,13 @@ let milk /* used for magicCard glow */
 let lastRequestTime = 0
 
 let debugCorner /* output debug text in the bottom left corner of the canvas */
-let mtgSetName = 'woe'
+let setName = 'woe'
 let flavorTextToggle = true
 
 function preload() {
     font = loadFont('data/consola.ttf')
 
-    const req = `https://api.scryfall.com/cards/search?q=set:${mtgSetName}`
+    const req = `https://api.scryfall.com/cards/search?q=set:${setName}`
     initialScryfallQueryJSON = loadJSON(req)
 }
 
@@ -85,6 +85,42 @@ function setup() {
         let pageTwoJSONURL = initialScryfallQueryJSON['next_page']
         loadJSON(pageTwoJSONURL, gotData)
     }
+
+    populateWallpapers()
+}
+
+
+function populateWallpapers() {
+    const wallpapers = {
+        'ltr': [
+            'birthdayescape.jpg',
+            'theshire.jpg',
+            'andurilflameofthewest.jpg',
+            'gandalfthegrey.jpg',
+            'samwisegamgee.jpg',
+            'doorsofdurin.jpg',
+            'lastmarchoftheents.jpg',
+            'stingtheglintingdagger.jpg',
+            'thegreyhavens.jpg'
+        ],
+        'woe': [
+            'evolvingwilds.jpg',
+            'island.jpg',
+            'restlessvinestalk.jpg',
+            'threebowls.jpg',
+            'solitarysanctuary.jpg'
+        ]
+    }
+
+    const setImgArr = wallpapers[setName]
+
+    /* use the array length as a scaling factor for random's [0,1) generator */
+    const randomIndex = Math.floor(Math.random() * setImgArr.length)
+    const wallpaperFileName = setImgArr[randomIndex];
+
+    const bgURL = `url("backgrounds/${setName}/${wallpaperFileName}")`
+    select('body').style('background-image', 'linear-gradient(rgba(0,0,0,0.5),' +
+        ` rgba(0,0,0,0.5)), ${bgURL}`)
 }
 
 
@@ -121,6 +157,7 @@ function resetDcShadow() {
 
 function draw() {
     if (loaded) {
+        clear()
         background(passage.cBackground)
         passage.render()
 
@@ -139,7 +176,7 @@ function draw() {
         /* debugCorner needs to be last so its z-index is highest */
         // debugCorner.setText(`frameCount: ${frameCount}`, 4)
         debugCorner.setText(`    card face ID: ${currentCardIndex} of ${cardFaces.length - 1}`, 2)
-        debugCorner.setText(`${mtgSetName} collector ID: ${currentCollectorNumber}`, 1)
+        debugCorner.setText(`${setName} collector ID: ${currentCollectorNumber}`, 1)
         debugCorner.setText(`     flavor text: ${flavorTextToggle? 'ON' : 'OFF'}`, 0)
         debugCorner.show()
     }

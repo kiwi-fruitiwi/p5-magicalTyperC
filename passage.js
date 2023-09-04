@@ -52,8 +52,8 @@ class Passage {
         this.originalCursorPos = new p5.Vector(this.X_START,this.TOP_MARGIN)
 
         /* colors */
-        this.cBackground = color(234, 34, 24)
-        this.cBoundingBox = color(0, 0, 100, 2)
+        this.cBackground = color(234, 34, 24, 20)
+        this.cBoundingBox = color(0, 0, 0, 20)
     }
 
 
@@ -92,6 +92,8 @@ class Passage {
         let ccp = new p5.Vector(this.X_START,
             this.TOP_MARGIN + this.yScroll.pos.y)
 
+        // this.#showViewPortBackgroundColor()
+
         /* iterate through every char in this passage and display it */
         for (let i=0; i<this.text.length; i++) {
             /* save the position every character for later */
@@ -101,11 +103,21 @@ class Passage {
             /* draw current letter; greater z-index than highlightBox */
             fill(0, 0, 100, this.TEXT_ALPHA)
             strokeWeight(0)
-            text(this.text[i], ccp.x, ccp.y)
+
+            /* only display characters if they're inside the viewport
+                skip doing so unless it's "within view".
+             */
+            let withinView = (this.lines < (this.linesToShow + this.linesScrolled))
+            if (withinView) {
+                text(this.text[i], ccp.x, ccp.y)
+            }
+
             if (this.text[i] === '\n') {
                 push()
                 translate(0, 1/4*textAscent()) /* translate down to char base */
-                this.#drawReturnGlyph(ccp, textWidth('m') * .85)
+
+                if (withinView)
+                    this.#drawReturnGlyph(ccp, textWidth('m') * .85)
                 pop()
             }
             strokeWeight(0)
@@ -121,12 +133,15 @@ class Passage {
         this.#showCurrentWordBar(charPositions)
         this.#showTextCursor(charPositions)
         // this.#showBoundingBox(charPositions)
-        this.#drawViewPort()
+        // this.#drawViewPort()
         this.#showProgressBar(charPositions)
         this.#scrollDown(charPositions, this.linesToShow)
 
+        /** arrival steering behavior for scrolling */
         this.yScroll.update()
         this.yScroll.returnHome(this.HIGHLIGHT_BOX_HEIGHT)
+
+        debugCorner.setText(`           lines: ${this.lines} lines scrolled: ${this.linesScrolled}`, 3)
     }
 
 
@@ -331,8 +346,10 @@ class Passage {
      */
     #handleNewLines(i, cursor) {
         /* wrap to handle newlines → needs additional code in keyPressed */
-        if (this.text[i] === '\n')
+        if (this.text[i] === '\n') {
             this.#wrapCursor(cursor, i)
+            this.lines += 1
+        }
 
         /** if we're at a whitespace, determine if we need a new line:
          find the next whitespace; the word between us and that
@@ -358,6 +375,7 @@ class Passage {
             if (textWidth(nextWord) + textWidth(this.text[i]) + cursor.x >
                 this.LINE_WRAP_X_POS) {
                 this.#wrapCursor(cursor, i)
+                this.lines += 1
             }
         }
     }
