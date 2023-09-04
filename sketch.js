@@ -27,7 +27,10 @@ let initialScryfallQueryJSON /* json file from scryfall: set=snc */
 let scryfallData /* the 'data' field of a JSON query from api.scryfall */
 let cardImg
 let currentCardIndex
-let cards /* packed up JSON data */
+let currentCollectorNumber /* collector number of current card */
+
+/** @type {object} */
+let cardFaces /* packed up JSON data. some cards have multiple faces */
 
 const ART_CROP_WIDTH = 626
 const ART_CROP_HEIGHT = 457
@@ -38,11 +41,13 @@ let milk /* used for magicCard glow */
 let lastRequestTime = 0
 
 let debugCorner /* output debug text in the bottom left corner of the canvas */
+let mtgSetName = 'woe'
+let flavorTextToggle = true
 
 function preload() {
     font = loadFont('data/consola.ttf')
 
-    const req = 'https://api.scryfall.com/cards/search?q=set:woe'
+    const req = `https://api.scryfall.com/cards/search?q=set:${mtgSetName}`
     initialScryfallQueryJSON = loadJSON(req)
 }
 
@@ -59,7 +64,17 @@ function setup() {
     /* initialize instruction div */
     instructions = select('#ins')
     instructions.html(`<pre>
-        numpad 1 → freeze sketch</pre>`)
+        🍁ᵂᴼᴱ: Wilds of Eldraine
+        numpad 1 → freeze sketch
+        
+        numpad 4 → previous card
+        numpad 6 → next card
+        numpad 2 → jump forward 10 cards
+        numpad 8 → jump backward 10 cards
+        
+        numpad 5 → random card
+        numpad 7 → toggle flavor text
+        </pre>`)
 
     /* change collector's number with numpad keys! */
     /* 🥝 [4:-1, 6:+1, 5: random, 8:+10, 2:-10] 🌊 */
@@ -90,11 +105,11 @@ function gotData(data) {
         console.log(`total request time → ${millis()}`)
         console.log(`total data length: ${scryfallData.length}`)
 
-        cards = getCardData(scryfallData)
-        cards.sort(sortCardsByID)
-        console.log(`cards loaded! → ${cards.length}`)
+        cardFaces = getCardData(scryfallData)
+        cardFaces.sort(sortCardsByID)
+        console.log(`cards loaded! → ${cardFaces.length}`)
 
-        currentCardIndex = int(random(0, cards.length))
+        currentCardIndex = int(random(0, cardFaces.length))
         updateCard()
     }
 }
@@ -128,8 +143,10 @@ function draw() {
         resetDcShadow()
 
         /* debugCorner needs to be last so its z-index is highest */
-        debugCorner.setText(`frameCount: ${frameCount}`, 4)
-        debugCorner.setText(`set id: ${currentCardIndex} of ${cards.length - 1}`, 3)
+        // debugCorner.setText(`frameCount: ${frameCount}`, 4)
+        debugCorner.setText(`    card face ID: ${currentCardIndex} of ${cardFaces.length - 1}`, 2)
+        debugCorner.setText(`${mtgSetName} collector ID: ${currentCollectorNumber}`, 1)
+        debugCorner.setText(`     flavor text: ${flavorTextToggle? 'ON' : 'OFF'}`, 0)
         debugCorner.show()
     }
 }
@@ -172,7 +189,7 @@ function processCardFace(element, imgURIs) {
         typeText += `${element['power']}/${element['toughness']}\n`
     /* we need whitespace at end for passage end detection to work */
 
-    if (element['flavor_text'])
+    if (flavorTextToggle && element['flavor_text'])
         typeText += `\n${element['flavor_text']}\n`
     else typeText += '\n'
 
@@ -295,11 +312,11 @@ function getCardData(data) {
 
 
 function keyPressed() {
-    // don't do anything if we detect SHIFT ALT CONTROL keycodes
-    if (keyCode === SHIFT ||
-        keyCode === ALT ||
-        keyCode === CONTROL ||
-        keyCode === 20) { // this is capslock
+    /* catch keys that are greater than one character, including F12 and
+        modifiers, but not including ENTER
+     */
+    if (key.length > 1 && keyCode !== ENTER) {
+        console.log(`🔥 ${key} caught and neutralized :P`)
         return
     }
 
@@ -317,13 +334,15 @@ function keyPressed() {
     } else if (keyCode === 104) { /* numpad 8 */
         currentCardIndex += 10
         updateCard()
-    } else if (keyCode === 98) { /* numpad 2 */
+    } else if (keyCode === 98) {  /* numpad 2 */
         currentCardIndex -= 10
         updateCard()
     } else if (keyCode === 101) { /* numpad 5 */
-        currentCardIndex = int(random(0, cards.length))
+        currentCardIndex = int(random(0, cardFaces.length))
         console.log(currentCardIndex)
         updateCard()
+    } else if (keyCode === 103) { /* numpad 7 */
+        flavorTextToggle = !flavorTextToggle
     } else {
         /* temporary hack for handling enter key */
         if (keyCode === ENTER) {
@@ -355,10 +374,12 @@ function keyPressed() {
 /** selects a new card based on the currentCardIndex; displays its image and
  associated typing passage */
 function updateCard() {
-    currentCardIndex = constrain(currentCardIndex, 0, cards.length-1)
-    passage = new Passage(cards[currentCardIndex].typeText)
-    cardImg = loadImage(cards[currentCardIndex].png_uri)
-    console.log(cards[currentCardIndex].typeText)
+    currentCardIndex = constrain(currentCardIndex, 0, cardFaces.length-1)
+    currentCollectorNumber = cardFaces[currentCardIndex]['collector_number']
+
+    passage = new Passage(cardFaces[currentCardIndex].typeText)
+    cardImg = loadImage(cardFaces[currentCardIndex].png_uri)
+    console.log(cardFaces[currentCardIndex].typeText)
 
     loaded = true
 }
@@ -377,7 +398,7 @@ function processTypedKey(k) {
         // currentCardIndex = int(random(0, cards.length))
 
         /* go to the next card unless we're at the end of the list */
-        if (currentCardIndex !== cards.length-1) {
+        if (currentCardIndex !== cardFaces.length-1) {
             currentCardIndex += 1
         } else { /* wrap */
             currentCardIndex = 0
