@@ -74,7 +74,7 @@ function setup() {
         </pre>`)
 
     /* change collector's number with numpad keys! */
-    /* 🥝 [4:-1, 6:+1, 5: random, 8:+10, 2:-10] 🌊 */
+    /* 🥝 [4:-1, 6:+1, 5: random, 8:+10, 2:-10, 3: 0] 🌊 */
 
     correctSound = loadSound('data/correct.wav')
     incorrectSound = loadSound('data/incorrect.wav')
@@ -215,6 +215,7 @@ function processCardFace(element, imgURIs) {
         manaCost = ' ' + manaCost
 
     typeText = `${element.name}${manaCost}\n${element['type_line']}\n${element['oracle_text']}\n`
+
     /* sometimes p/t don't exist. check type */
     if (creature.test(element['type_line']))
         typeText += `${element['power']}/${element['toughness']}\n`
@@ -279,6 +280,12 @@ function getCardData(data) {
     let cardFaceCount = 0
 
     for (let element of data) {
+
+        /* filter for rarity */
+        const rarity = new RegExp('(common|uncommon|rare|mythic)')
+        if (!rarity.test(element['rarity']))
+            continue
+
         /** object containing URLs for various image sizes and styles */
         let imgURIs
 
@@ -325,20 +332,39 @@ function getCardData(data) {
                 face['keywords'] = element['keywords']
                 face['rarity'] = element['rarity']
 
-                results.push(processCardFace(face, imgURIs))
-                cardFaceCount += 1
+                if (isTrick(element['keywords'], face['type_line'])) {
+                    results.push(processCardFace(face, imgURIs))
+                    cardFaceCount += 1
+                }
             }
         } else {
             /* process single face */
             imgURIs = element['image_uris']
-            results.push(processCardFace(element, imgURIs))
-            cardCount += 1
+
+            if (isTrick(element['keywords'], element['type_line'])) {
+                results.push(processCardFace(element, imgURIs))
+                cardCount += 1
+            }
         }
     }
 
     console.log(`🍆 [+single cards] ${cardCount}`)
     console.log(`🍆 [+card faces] ${cardFaceCount}`)
-    return results
+
+    /* remove jumpstart cards. 🍁woe collector ≤ 276 TODO universalize ∀ set*/
+    return results.filter(item => item['collector_number'] <= 276)
+}
+
+
+/**
+ * returns true if card is a trick: instant or has flash
+ * @param keywords keywords for multi-faced cards are done on the main face only
+ * @param typeline the type line is on the face for multi-faced cards, and with
+ * the card data for single-faced cards
+ * @returns {boolean}
+ */
+function isTrick(keywords, typeline) {
+    return ((keywords.includes('Flash')) || (typeline.includes('Instant')))
 }
 
 
@@ -346,8 +372,11 @@ function keyPressed() {
     /* catch keys that are greater than one character, including F12 and
         modifiers, but not including ENTER
      */
-    if (key.length > 1 && keyCode !== ENTER) {
-        console.log(`🔥 ${key} caught and neutralized :P`)
+    console.log(`🐳${key}`)
+
+    if (key.length > 1 && keyCode !== ENTER &&
+        keyCode !== LEFT_ARROW && keyCode !== RIGHT_ARROW &&
+        keyCode !== UP_ARROW && keyCode !== DOWN_ARROW) {
         return
     }
 
@@ -356,16 +385,16 @@ function keyPressed() {
         noLoop()
         instructions.html(`<pre>
             sketch stopped</pre>`)
-    } else if (keyCode === 100) { /* numpad 4 */
+    } else if (keyCode === 100 || keyCode === LEFT_ARROW) { /* numpad 4 */
         currentCardIndex--
         updateCard()
-    } else if (keyCode === 102) { /* numpad 6 */
+    } else if (keyCode === 102 || keyCode === RIGHT_ARROW) { /* numpad 6 */
         currentCardIndex++
         updateCard()
-    } else if (keyCode === 104) { /* numpad 8 */
+    } else if (keyCode === 104 || keyCode === UP_ARROW) { /* numpad 8 */
         currentCardIndex += 10
         updateCard()
-    } else if (keyCode === 98) {  /* numpad 2 */
+    } else if (keyCode === 98 || keyCode === DOWN_ARROW) {  /* numpad 2 */
         currentCardIndex -= 10
         updateCard()
     } else if (keyCode === 101) { /* numpad 5 */
@@ -374,6 +403,9 @@ function keyPressed() {
         updateCard()
     } else if (keyCode === 103) { /* numpad 7 */
         flavorTextToggle = !flavorTextToggle
+    } else if (keyCode === 99) { /* numpad 3 */
+        currentCardIndex = 0
+        updateCard()
     } else {
         /* temporary hack for handling enter key */
         if (keyCode === ENTER) {
